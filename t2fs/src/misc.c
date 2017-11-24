@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// FUN��ES AUXILIARES
+// FUNÇÔES AUXILIARES
 
 WORD wordConvert(int *pos, BYTE *buffer){
 	WORD bird, auxbuffer[2] = {0};
@@ -27,11 +27,11 @@ DWORD dWordConvert(int pos, BYTE *buffer){
 	return birdbird;
 }
 
-void initialize(){
+void initialize(int* initialized,t2fs_superbloco* superbloco,t2fs_record* rootDir){
 	int i, *curr_pos, sector_aux;
 	BYTE *buffer = (char*) malloc(SECTOR_SIZE);
 
-	if (!initialized){
+	if (!(*initialized)){
 		read_sector(0, buffer);
 		for (i = 0; i < 4; i++){
 			superbloco->id[i] = buffer[3-i];
@@ -54,6 +54,7 @@ void initialize(){
 		(*curr_pos) = MAX_FILE_NAME_SIZE;
 		rootDir->bytesFileSize = dWordConvert(curr_pos, buffer);
 		rootDir->firstCluster = dWordConvert(curr_pos, buffer);
+		(*initialized) = 1;
 	}
 }
 

@@ -6,28 +6,39 @@
 #include <stdio.h>
 #include <string.h>
 
+#define INIT {
+	initialize(&initialized,superbloco,rootDir);
+}
+
 t2fs_superbloco superbloco;
 int initialized = 0;
-char *current_path;
+char *current_path= "/";
 t2fs_record rootDir;
+
+t2fs_record arquivos_abertos[10] = { NULL,NULL,NULL,NULL,NULL,
+												NULL,NULL,NULL,NULL,NULL };
+
 
 
 // FUN��ES PRINCIPAIS DA BILBIOTECA
 
 
-int identify2 (char *name, int size){
+int identify2 (char *name, int size){ INIT;
 	int i;
 	char *ident = "Fernando Garcia Bock 242255\nLeonardo Wellausen 261571\nJoão Batista Manique Henz 242251\0";
 
-	initialize();
 	if (size >= sizeof(ident)){
 		strcpy(name, ident);
+		return 0;
 	}
 	else{
 		for(i = 0; i < size; i++){
 			name[i] = ident[i];
 		}
+		return 0;
 	}
+
+	return -1;
 	// PLACEHOLDER DE FUN��O TBQH
 	/*-----------------------------------------------------------------------------
 	Fun��o: Usada para identificar os desenvolvedores do T2FS.
@@ -46,7 +57,13 @@ int identify2 (char *name, int size){
 
 
 
-FILE2 create2 (char *filename){
+FILE2 create2 (char *filename){ INIT;
+
+
+
+
+
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o: Criar um novo arquivo.
 		O nome desse novo arquivo � aquele informado pelo par�metro "filename".
@@ -64,7 +81,8 @@ FILE2 create2 (char *filename){
 
 
 
-int delete2 (char *filename){
+int delete2 (char *filename){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um arquivo do disco.
 		O nome do arquivo a ser apagado � aquele informado pelo par�metro "filename".
@@ -78,7 +96,8 @@ int delete2 (char *filename){
 
 
 
-FILE2 open2 (char *filename){
+FILE2 open2 (char *filename){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
 		O nome desse novo arquivo � aquele informado pelo par�metro "filename".
@@ -97,7 +116,8 @@ FILE2 open2 (char *filename){
 
 
 
-int close2 (FILE2 handle){
+int close2 (FILE2 handle){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fecha o arquivo identificado pelo par�metro "handle".
 
@@ -110,7 +130,8 @@ int close2 (FILE2 handle){
 
 
 
-int read2 (FILE2 handle, char *buffer, int size){
+int read2 (FILE2 handle, char *buffer, int size){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura de "size" bytes do arquivo identificado por "handle".
 		Os bytes lidos s�o colocados na �rea apontada por "buffer".
@@ -128,7 +149,8 @@ int read2 (FILE2 handle, char *buffer, int size){
 
 
 
-int write2 (FILE2 handle, char *buffer, int size){
+int write2 (FILE2 handle, char *buffer, int size){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a escrita de "size" bytes no arquivo identificado por "handle".
 		Os bytes a serem escritos est�o na �rea apontada por "buffer".
@@ -145,7 +167,8 @@ int write2 (FILE2 handle, char *buffer, int size){
 
 
 
-int truncate2 (FILE2 handle){
+int truncate2 (FILE2 handle){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fun��o usada para truncar um arquivo.
 		Remove do arquivo todos os bytes a partir da posi��o atual do contador de posi��o (CP)
@@ -161,7 +184,8 @@ int truncate2 (FILE2 handle){
 
 
 
-int seek2 (FILE2 handle, unsigned int offset){
+int seek2 (FILE2 handle, unsigned int offset){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Reposiciona o contador de posi��es (current pointer) do arquivo identificado por "handle".
 		A nova posi��o � determinada pelo par�metro "offset".
@@ -179,7 +203,8 @@ int seek2 (FILE2 handle, unsigned int offset){
 
 
 
-int mkdir2 (char *pathname){
+int mkdir2 (char *pathname){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Criar um novo diret�rio.
 		O caminho desse novo diret�rio � aquele informado pelo par�metro "pathname".
@@ -196,7 +221,8 @@ int mkdir2 (char *pathname){
 
 
 
-int rmdir2 (char *pathname){
+int rmdir2 (char *pathname){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um subdiret�rio do disco.
 		O caminho do diret�rio a ser apagado � aquele informado pelo par�metro "pathname".
@@ -216,7 +242,8 @@ int rmdir2 (char *pathname){
 
 
 
-int chdir2 (char *pathname){
+int chdir2 (char *pathname){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Altera o current path
 		O novo caminho do diret�rio a ser usado como current path � aquele informado pelo par�metro "pathname".
@@ -235,7 +262,8 @@ int chdir2 (char *pathname){
 
 
 
-int getcwd2 (char *pathname, int size){
+int getcwd2 (char *pathname, int size){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fun��o que informa o diret�rio atual de trabalho.
 		O T2FS deve copiar o pathname do diret�rio de trabalho, incluindo o �\0� do final do string, para o buffer indicado por "pathname".
@@ -254,7 +282,8 @@ int getcwd2 (char *pathname, int size){
 
 
 
-DIR2 opendir2 (char *pathname){
+DIR2 opendir2 (char *pathname){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um diret�rio existente no disco.
 		O caminho desse diret�rio � aquele informado pelo par�metro "pathname".
@@ -273,7 +302,8 @@ DIR2 opendir2 (char *pathname){
 
 
 
-int readdir2 (DIR2 handle, DIRENT2 *dentry){
+int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura das entradas do diret�rio identificado por "handle".
 		A cada chamada da fun��o � lida a entrada seguinte do diret�rio representado pelo identificador "handle".
@@ -298,7 +328,8 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry){
 
 
 
-int closedir2 (DIR2 handle){
+int closedir2 (DIR2 handle){ INIT;
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fecha o diret�rio identificado pelo par�metro "handle".
 
