@@ -15,7 +15,7 @@ int initialized = 0;
 char *current_path= "/";
 t2fs_record rootDir;
 
-t2fs_record arquivos_abertos[10] = { NULL,NULL,NULL,NULL,NULL,
+t2fs_record* lista_arq_abertos[10] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
 
 
@@ -58,8 +58,17 @@ int identify2 (char *name, int size){ INIT;
 
 
 FILE2 create2 (char *filename){ INIT;
+	t2fs_record* novo_record;
+
+	novo_record->TypeVal = 0x01;
+	strcpy(novo_record->name,filename);
+	novo_record->bytesFileSize = 0;
+	novo_record->firstCluster = procuraClusterVazio(superbloco.pFATSectorStart) ;
 
 
+	int handle = insereListaArqAbertos(novo_record,lista_arq_abertos);
+	if(handle)
+		return handle;
 
 
 

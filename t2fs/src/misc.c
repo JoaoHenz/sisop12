@@ -1,9 +1,12 @@
 #ifndef MISC_C
 #define MISC_C
 
+
 #include "../include/misc.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#define MAX_LAA 10
 
 // FUNÇÔES AUXILIARES
 
@@ -58,6 +61,27 @@ void initialize(int* initialized,t2fs_superbloco* superbloco,t2fs_record* rootDi
 	}
 }
 
+int insereListaArqAbertos(t2fs_record* novo_record, t2fs_record* lista_arq_abertos){
+	int i=0;
+
+	while(i>MAX_LAA && lista_arq_abertos[i])
+		i++;
+
+	if (!lista_arq_abertos[i]){
+		lista_arq_abertos[i] = malloc(sizeof(t2fs_record));
+
+		lista_arq_abertos[i]->TypeVal = novo_record->TypeVal;
+		strcpy(lista_arq_abertos[i]->name,novo_record->name )
+		lista_arq_abertos[i]->bytesFileSize = novo_record->bytesFileSize;
+		lista_arq_abertos[i]->firstCluster = novo_record->firstCluster;
+
+
+		return i; //execução terminou com sucesso, devolve o handler
+	}
+
+	return NULL; //execução acabou com erros
+
+}
 
 
 
