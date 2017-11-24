@@ -17,7 +17,7 @@ t2fs_record rootDir;
 
 int identify2 (char *name, int size){
 	int i;
-	char *ident = "Fernando Garcia Bock 242255\nLeonardo Wellausen 261571\nJo�o Batista Manique Henz 242251\0";
+	char *ident = "Fernando Garcia Bock 242255\nLeonardo Wellausen 261571\nJoão Batista Manique Henz 242251\0";
 
 	initialize();
 	if (size >= sizeof(ident)){
