@@ -14,9 +14,10 @@
 // FUNÇÔES AUXILIARES
 
 WORD wordConvert(int *pos, BYTE *buffer){
+	int i;
 	WORD bird, auxbuffer[2] = {0};
 	for (i = 0; i < 2; i++){
-		auxbuffer[i] = buffer[(*pos)+1-i];
+		auxbuffer[i] = buffer[i+(*pos)];
 	}
 	bird = (unsigned short int) (auxbuffer[0] | (auxbuffer[1] << 8));
 	(*pos) += 2;
@@ -24,9 +25,10 @@ WORD wordConvert(int *pos, BYTE *buffer){
 }
 
 DWORD dWordConvert(int pos, BYTE *buffer){
+	int i;
 	DWORD birdbird, auxbuffer[4] = {0};
 	for (i = 0; i < 4; i++){
-		theword = buffer[(*pos)+3-i];
+		theword = buffer[i+(*pos)];
 	}
 	birdbird = (unsigned int) (auxbuffer[0] | (auxbuffer[1] << 8) | (auxbuffer[2] << 16) | (auxbuffer[3] << 24));
 	(*pos) += 4;
