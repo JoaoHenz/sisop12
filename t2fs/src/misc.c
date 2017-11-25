@@ -3,8 +3,11 @@
 
 
 #include "../include/misc.h"
+#include "../include/apidisk.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "./tsfs.h"
 
 #define MAX_LAA 10
 
@@ -84,6 +87,23 @@ int insereListaArqAbertos(t2fs_record* novo_record, t2fs_record* lista_arq_abert
 
 	return NULL; //execução acabou com erros
 
+}
+
+
+DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
+	int i = pFATSectorStart;
+	int flagAchou =0;
+	char *buffer;
+	while(i<DataSectorStart && read_sector(i, buffer)==0) && flagAchou!=1{
+		read_sector(i, buffer);
+		if (strcmp(buffer,"0x00000000")==0)
+			flagAchou=1;
+		i++;
+	}
+	if (flagAchou==1)
+		return i;
+
+	return NULL;
 }
 
 
