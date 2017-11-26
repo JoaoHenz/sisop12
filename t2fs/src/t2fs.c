@@ -1,14 +1,8 @@
-#ifndef T2FS_C
-#define T2FS_C
-
-#include "../include/misc.h"
+#include "misc.c"
 #include "../include/t2fs.h"
 #include <stdio.h>
 #include <string.h>
 
-#define INIT {
-	initialize(&initialized,superbloco,rootDir);
-}
 #define BYTES_PER_SECTOR 256
 
 struct t2fs_superbloco superbloco;
@@ -18,6 +12,10 @@ struct t2fs_record rootDir;
 
 Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
+
+
+#define INIT {initialize(&initialized,&superbloco,&rootDir);}
+
 
 
 
@@ -63,15 +61,15 @@ FILE2 create2 (char *filename){ INIT;
 		return -1;  //não há mais espaço para abrir arquivos
 	}
 	handlerCount++;
-	
-	t2fs_record* novo_record;
+
+	struct t2fs_record* novo_record;
 
 	novo_record->TypeVal = 0x01;//tipo arquivo simples
 	strcpy(novo_record->name,filename);
 	novo_record->bytesFileSize = 0;
 	novo_record->firstCluster = procuraClusterVazio(superbloco.pFATSectorStart, superbloco.DataSectorStart, BYTES_PER_SECTOR) ;
 
-	if(novo_firstCluster){
+	if(novo_record->firstCluster){
 		int handle = insereListaArqAbertos(novo_record,lista_arq_abertos);
 		if(handle)
 			return handle;
@@ -356,15 +354,10 @@ int closedir2 (DIR2 handle){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
+int main(int argc, char const *argv[]) {
+	/* temp main for testin */
 
+	return;
+}
 
-
-
-
-
-
-
-
-
-#endif
 //END OF FILE

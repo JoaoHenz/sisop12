@@ -1,21 +1,8 @@
-#ifndef MISC_C
-#define MISC_C
-
-
 #include "../include/misc.h"
+#include "../include/t2fs.h"
 #include "../include/apidisk.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "./t2fs.h"
-
-#define MAX_LAA 10
-
-typedef struct fileHandler{
-	int fileHandle;	//handle do arquivo
-	int posFile;		//current position do arquivo
-	struct t2fs_record *fileRecord;		//pointer para o record do arquivo
-} Handler;
 
 // FUNÇÔES AUXILIARES
 
@@ -30,18 +17,19 @@ WORD wordConvert(int *pos, BYTE *buffer){
 	return bird;
 }
 
-DWORD dWordConvert(int pos, BYTE *buffer){
+DWORD dWordConvert(int *pos, BYTE *buffer){
 	int i;
 	DWORD birdbird, auxbuffer[4] = {0};
 	for (i = 0; i < 4; i++){
-		theword = buffer[i+(*pos)];
+		//theword = buffer[i+(*pos)];  //whatever the fuck is going on here
+		auxbuffer[i] = buffer[i+(*pos)];
 	}
 	birdbird = (unsigned int) (auxbuffer[0] | (auxbuffer[1] << 8) | (auxbuffer[2] << 16) | (auxbuffer[3] << 24));
 	(*pos) += 4;
 	return birdbird;
 }
 
-void initialize(int* initialized,t2fs_superbloco* superbloco,t2fs_record* rootDir){
+void initialize(int* initialized,struct t2fs_superbloco* superbloco,struct t2fs_record* rootDir){
 	int i, *curr_pos, sector_aux;
 	BYTE *buffer = (char*) malloc(SECTOR_SIZE);
 
@@ -59,7 +47,7 @@ void initialize(int* initialized,t2fs_superbloco* superbloco,t2fs_record* rootDi
 		superbloco->pFATSectorStart = dWordConvert(curr_pos, buffer);
 		superbloco->RootDirCluster = dWordConvert(curr_pos, buffer);
 		superbloco->DataSectorStart = dWordConvert(curr_pos, buffer);
-		sector_aux = RootDirCluster * SectorsPerCluster;
+		sector_aux = superbloco->RootDirCluster * superbloco->SectorsPerCluster;
 		read_sector(sector_aux, buffer);
 		rootDir->TypeVal = buffer[0];
 		for(i = 0; i < MAX_FILE_NAME_SIZE; i++){
@@ -72,9 +60,10 @@ void initialize(int* initialized,t2fs_superbloco* superbloco,t2fs_record* rootDi
 	}
 }
 
-int insereListaArqAbertos(t2fs_record* novo_record, t2fs_record* lista_arq_abertos){
-	int i=0;
 
+int insereListaArqAbertos(struct t2fs_record* novo_record,Handler* lista_arq_abertos[MAX_LAA]){
+	int i=0;
+/*
 	while(i<MAX_LAA && (*lista_arq_abertos[i])->TypeVal != 0x00){
 		i++
 	}
@@ -89,14 +78,15 @@ int insereListaArqAbertos(t2fs_record* novo_record, t2fs_record* lista_arq_abert
 
 
 		return i; //execução terminou com sucesso, devolve o handler
-	}
+	}*/
 
-	return NULL; //execução acabou com erros
+	return -1; //execução acabou com erros
 
 }
 
 
-DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart, sector_size){
+
+DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart,int sector_size){
 	int i = pFATSectorStart;
 	int flagAchou =0;
 	char *buffer = malloc(sector_size);
@@ -109,13 +99,5 @@ DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart, sector_si
 	if (flagAchou==1)
 		return i;
 
-	return NULL;
+	return -1;
 }
-
-
-
-
-
-
-#endif
-//END OF FILE
