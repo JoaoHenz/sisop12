@@ -9,13 +9,14 @@
 #define INIT {
 	initialize(&initialized,superbloco,rootDir);
 }
+#define BYTES_PER_SECTOR 256
 
-t2fs_superbloco superbloco;
-int initialized = 0;
+struct t2fs_superbloco superbloco;
+int initialized = 0, handlerCount = 0;
 char *current_path= "/";
-t2fs_record rootDir;
+struct t2fs_record rootDir;
 
-Handler* lista_arq_abertos[10] = { NULL,NULL,NULL,NULL,NULL,
+Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
 
 
@@ -58,12 +59,17 @@ int identify2 (char *name, int size){ INIT;
 
 
 FILE2 create2 (char *filename){ INIT;
+	if (handlerCount>=MAX_LAA){
+		return -1;  //não há mais espaço para abrir arquivos
+	}
+	handlerCount++;
+	
 	t2fs_record* novo_record;
 
 	novo_record->TypeVal = 0x01;//tipo arquivo simples
 	strcpy(novo_record->name,filename);
 	novo_record->bytesFileSize = 0;
-	novo_record->firstCluster = procuraClusterVazio(superbloco.pFATSectorStart, superbloco.DataSectorStart) ;
+	novo_record->firstCluster = procuraClusterVazio(superbloco.pFATSectorStart, superbloco.DataSectorStart, BYTES_PER_SECTOR) ;
 
 	if(novo_firstCluster){
 		int handle = insereListaArqAbertos(novo_record,lista_arq_abertos);

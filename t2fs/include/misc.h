@@ -1,6 +1,12 @@
 #ifndef MISC_HEADER
 #define MISC_HEADER
 
+#include "../include/apidisk.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "./tsfs.h"
+
 
 
 WORD wordConvert(int *pos, BYTE *buffer);

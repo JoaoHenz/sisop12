@@ -7,9 +7,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "./tsfs.h"
+#include "./t2fs.h"
 
 #define MAX_LAA 10
+
+typedef struct fileHandler{
+	int fileHandle;	//handle do arquivo
+	int posFile;		//current position do arquivo
+	struct t2fs_record *fileRecord;		//pointer para o record do arquivo
+} Handler;
 
 // FUNÇÔES AUXILIARES
 
@@ -90,12 +96,12 @@ int insereListaArqAbertos(t2fs_record* novo_record, t2fs_record* lista_arq_abert
 }
 
 
-DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
+DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart, sector_size){
 	int i = pFATSectorStart;
 	int flagAchou =0;
-	char *buffer;
-	while(i<DataSectorStart && read_sector(i, buffer)==0) && flagAchou!=1{
-		read_sector(i, buffer);
+	char *buffer = malloc(sector_size);
+	while((i<DataSectorStart) && (read_sector(i, buffer)==0) && (flagAchou!=1)){
+		//read_sector(i, buffer);  //já foi lido no if
 		if (strcmp(buffer,"0x00000000")==0)
 			flagAchou=1;
 		i++;
