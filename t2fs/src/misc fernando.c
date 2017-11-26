@@ -8,6 +8,12 @@
 
 #define MAX_LAA 10
 
+typedef struct fileHandler{
+	int fileHandle;	//handle do arquivo
+	int posFile;		//current position do arquivo
+	t2fs_record *fileRecord;		//pointer para o record do arquivo
+} Handler;
+
 // FUNÇÔES AUXILIARES
 
 WORD wordConvert(int *pos, BYTE *buffer){

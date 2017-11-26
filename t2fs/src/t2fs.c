@@ -15,7 +15,7 @@ int initialized = 0;
 char *current_path= "/";
 t2fs_record rootDir;
 
-t2fs_record* lista_arq_abertos[10] = { NULL,NULL,NULL,NULL,NULL,
+Handler* lista_arq_abertos[10] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
 
 
