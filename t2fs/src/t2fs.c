@@ -1,11 +1,12 @@
 #include "misc.c"
 #include "../include/t2fs.h"
+#include "../include/apidisk.h"
 #include <stdio.h>
 #include <string.h>
 
 #define BYTES_PER_SECTOR 256
 
-struct t2fs_superbloco superbloco;
+struct t2fs_superbloco *superbloco;
 int initialized = 0, handlerCount = 0;
 char *current_path= "/";
 struct t2fs_record rootDir;
@@ -14,7 +15,7 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
 
 
-#define INIT {initialize(&initialized,&superbloco,&rootDir);}
+#define INIT {initialize(&initialized,superbloco,&rootDir);}
 
 
 
@@ -57,7 +58,7 @@ int identify2 (char *name, int size){ INIT;
 
 
 FILE2 create2 (char *filename){ INIT;
-	if (handlerCount>=MAX_LAA){
+	/*if (handlerCount>=MAX_LAA){
 		return -1;  //não há mais espaço para abrir arquivos
 	}
 	handlerCount++;
@@ -73,7 +74,7 @@ FILE2 create2 (char *filename){ INIT;
 		int handle = insereListaArqAbertos(novo_record,lista_arq_abertos);
 		if(handle)
 			return handle;
-	}
+	}*/
 
 	//TODO arrumar estrutura de diretório
 
@@ -356,7 +357,13 @@ int closedir2 (DIR2 handle){ INIT;
 
 int main(int argc, char const *argv[]) {
 	/* temp main for testin */
+	printf("\nyo niggaaaaaah\n");
+	//INIT;
+	superbloco = (struct t2fs_superbloco *) malloc(256);
+	char *s = malloc(256);
 
+
+	printf("%d\n", read_sector(256, s));
 	return;
 }
 
