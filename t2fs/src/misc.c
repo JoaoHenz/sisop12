@@ -44,6 +44,7 @@ void initialize(int* initialized,struct t2fs_superbloco* superbloco,struct t2fs_
 		superbloco->DiskSize = dWordConvert(curr_pos, buffer);
 		superbloco->NofSectors  = dWordConvert(curr_pos, buffer);
 		superbloco->SectorsPerCluster = dWordConvert(curr_pos, buffer);
+		sectors_per_cluster = superbloco->SectorsPerCluster;
 		superbloco->pFATSectorStart = dWordConvert(curr_pos, buffer);
 		superbloco->RootDirCluster = dWordConvert(curr_pos, buffer);
 		superbloco->DataSectorStart = dWordConvert(curr_pos, buffer);
@@ -87,15 +88,29 @@ int insereListaArqAbertos(struct t2fs_record* novo_record,Handler* lista_arq_abe
 
 
 
-DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart,int sector_size){
-	int i = pFATSectorStart;
+DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
+	int i = pFATSectorStart, index = 0;
 	int flagAchou =0;
-	char *buffer = malloc(sector_size);
+	char *buffer = malloc(SECTOR_SIZE);
 	while((i<DataSectorStart) && (read_sector(i, buffer)==0) && (flagAchou!=1)){
-		//read_sector(i, buffer);  //já foi lido no if
-		if (strcmp(buffer,"0x00000000")==0)
-			flagAchou=1;
+		int j;
 		i++;
+		index = 0;
+		for(j=0; j<POINTERS_PER_SECTOR; j++){
+			unsigned int val =   (unsigned int) (buffer[index++]<<24 | (buffer[index++] << 16) | (buffer[index++] << 8) |
+			 							 	(buffer[index++]));
+			/*char pointer[4];
+			pointer[0] = buffer[index++];
+			pointer[1] = buffer[index++];
+			pointer[2] = buffer[index++];
+			pointer[3] = buffer[index++];
+			unsigned int val = (unsigned int) pointer;*/
+			printf("%hu\n",(unsigned int)dWordConvert(&index, buffer));
+			if (val == 0x00000000){
+				flagAchou=1;
+				break;
+			}
+		}
 	}
 	if (flagAchou==1)
 		return i;
@@ -109,7 +124,7 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 	unsigned int sector, aux;
 	BYTE *buffer;
 	DWORD next_cluster[4];
-	
+
 	// Read starter cluster from FAT
 	aux = directory->firstCluster;
 	sector = 1 + (aux / 64);
@@ -120,9 +135,7 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 			next_cluster[i] = buffer[cluster - i];
 		}
 		// Read the cluster (N sectors per cluster, so N*4 records per cluster)
-		
+
 	}
 	return -1;
 }
-
-

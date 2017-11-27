@@ -67,7 +67,7 @@ FILE2 create2 (char *filename){ INIT;
 	novo_record->TypeVal = 0x01;//tipo arquivo simples
 	strcpy(novo_record->name,filename);
 	novo_record->bytesFileSize = 0;
-	novo_record->firstCluster = procuraClusterVazio(superbloco.pFATSectorStart, superbloco.DataSectorStart, BYTES_PER_SECTOR) ;
+	novo_record->firstCluster = procuraClusterVazio(superbloco.pFATSectorStart, superbloco.DataSectorStart) ;
 
 	if(novo_record->firstCluster){
 		int handle = insereListaArqAbertos(novo_record,lista_arq_abertos);
@@ -112,12 +112,12 @@ int delete2 (char *filename){ INIT;
 
 FILE2 open2 (char *filename){ INIT;
 	struct t2fs_record novo_record;
-	
+
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
 		struct t2fs_record novo_dir;
 		//getDirRecord();
-		
+
 	}
 	// usando caminho absoluto para outro diretório
 	else if (filename [0] == '/'){
@@ -128,7 +128,7 @@ FILE2 open2 (char *filename){ INIT;
 		//getFileRecord(&currentDir, filename);
 	}
 
-	
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
@@ -389,14 +389,17 @@ int main(int argc, char const *argv[]) {
 	printf("%hu\n",(unsigned short int) superbloco->pFATSectorStart);
 	printf("%hu\n",(unsigned short int) superbloco->RootDirCluster);
 	printf("%hu\n",(unsigned short int) superbloco->DataSectorStart);
-	getchar();
-	identify2(name, 30);
+	//getchar();
+	//identify2(name, 128);
 	i = 0;
 	while(name[i] != '\0'){
 		printf("%c", name[i]);
 		i++;
 	}
-	return;
+
+	procuraClusterVazio(superbloco->pFATSectorStart, superbloco->DataSectorStart);
+		
+	return 0;
 }
 
 //END OF FILE
