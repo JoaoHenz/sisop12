@@ -57,23 +57,23 @@ int identify2 (char *name, int size){ INIT;
 
 
 FILE2 create2 (char *filename){ INIT;
-	/*if (handlerCount>=MAX_LAA){
+	if (handlerCount>=MAX_LAA){
 		return -1;  //não há mais espaço para abrir arquivos
 	}
 	handlerCount++;
 
-	struct t2fs_record* novo_record;
+	struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
 
 	novo_record->TypeVal = 0x01;//tipo arquivo simples
 	strcpy(novo_record->name,filename);
 	novo_record->bytesFileSize = 0;
-	novo_record->firstCluster = procuraClusterVazio(superbloco.pFATSectorStart, superbloco.DataSectorStart) ;
+	novo_record->firstCluster = procuraClusterVazio(superbloco->pFATSectorStart, superbloco->DataSectorStart) ;
 
-	if(novo_record->firstCluster){
+	if(novo_record->firstCluster != -1){
 		int handle = insereListaArqAbertos(novo_record,lista_arq_abertos);
 		if(handle)
 			return handle;
-	}*/
+	}
 
 	//TODO arrumar estrutura de diretório
 

@@ -64,22 +64,29 @@ void initialize(int* initialized,struct t2fs_superbloco* superbloco,struct t2fs_
 
 int insereListaArqAbertos(struct t2fs_record* novo_record,Handler* lista_arq_abertos[MAX_LAA]){
 	int i=0;
-/*
-	while(i<MAX_LAA && (*lista_arq_abertos[i])->TypeVal != 0x00){
-		i++
+
+	while((i<MAX_LAA) && (lista_arq_abertos[i] != NULL)){
+		i++;
 	}
 
-	if (!lista_arq_abertos[i]){
-		(*lista_arq_abertos[i]) = (t2fs_record) malloc(sizeof(t2fs_record));
+	if (lista_arq_abertos[i] == NULL){
+		Handler *handler = malloc(sizeof(Handler));
 
-		(*lista_arq_abertos[i])->TypeVal = novo_record->TypeVal;
-		strcpy((*lista_arq_abertos[i])->name,novo_record->name )
-		(*lista_arq_abertos[i])->bytesFileSize = novo_record->bytesFileSize;
-		(*lista_arq_abertos[i])->firstCluster = novo_record->firstCluster;
+		handler->fileHandle = i;
+		handler->posFile;
+		handler->fileRecord = novo_record;
+
+		lista_arq_abertos[i] = handler;
+		//(*lista_arq_abertos[i]) = (t2fs_record) malloc(sizeof(t2fs_record));
+
+		//(*lista_arq_abertos[i])->TypeVal = novo_record->TypeVal;
+		//strcpy((*lista_arq_abertos[i])->name,novo_record->name )
+		//(*lista_arq_abertos[i])->bytesFileSize = novo_record->bytesFileSize;
+		//(*lista_arq_abertos[i])->firstCluster = novo_record->firstCluster;
 
 
 		return i; //execução terminou com sucesso, devolve o handler
-	}*/
+	}
 
 	return -1; //execução acabou com erros
 
