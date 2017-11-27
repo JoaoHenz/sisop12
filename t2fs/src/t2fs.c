@@ -360,10 +360,11 @@ int main(int argc, char const *argv[]) {
 	printf("\nyo niggaaaaaah\n");
 	//INIT;
 	superbloco = (struct t2fs_superbloco *) malloc(256);
+
 	char *s = malloc(256);
 
 
-	printf("%d\n", read_sector(256, s));
+	printf("%d\n",read_sector(256,(char *) superbloco));
 	return;
 }
 
