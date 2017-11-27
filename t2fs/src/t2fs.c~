@@ -374,7 +374,6 @@ int closedir2 (DIR2 handle){ INIT;
 
 int main(int argc, char const *argv[]) {
 	/* temp main for testin */
-	printf("\nyo niggaaaaaah\n");
 	//INIT;
 	superbloco = (struct t2fs_superbloco *) malloc(256);
 	read_sector(0,(char *) superbloco);
@@ -382,13 +381,17 @@ int main(int argc, char const *argv[]) {
 	char *name = malloc(128);
 	int i;
 
-
-	printf("Version: %hu\n",(unsigned short int) superbloco->version	);
-	printf("Number of Sectors: %hu\n",(unsigned short int) superbloco->NofSectors);
-	printf("Sectors Per Cluster: %hu\n",(unsigned short int) superbloco->SectorsPerCluster);
-	printf("FAT Start Sector: %hu\n",(unsigned short int) superbloco->pFATSectorStart);
-	printf("Root Directory Start Cluster: %hu\n",(unsigned short int) superbloco->RootDirCluster);
-	printf("Data Start Sector: %hu\n",(unsigned short int) superbloco->DataSectorStart);
+	for (i = 0; i < 4; i++){
+		printf("Id: %c\n",(unsigned char) superbloco->id[i]);
+	}
+	printf("Version: %x\n",(unsigned short int) superbloco->version);
+	printf("Size of Superblock: %x\n",(unsigned short int) superbloco->SuperBlockSize);
+	printf("Disk Size: %u\n",(unsigned short int) superbloco->DiskSize);
+	printf("Number of Sectors: %u\n",(unsigned short int) superbloco->NofSectors);
+	printf("Sectors Per Cluster: %u\n",(unsigned short int) superbloco->SectorsPerCluster);
+	printf("FAT Start Sector: %u\n",(unsigned short int) superbloco->pFATSectorStart);
+	printf("Root Directory Start Cluster: %u\n",(unsigned short int) superbloco->RootDirCluster);
+	printf("Data Start Sector: %u\n",(unsigned short int) superbloco->DataSectorStart);
 	//getchar();
 	//identify2(name, 128);
 	/* TESTE DE IMPRESSÃO DO NOME
@@ -399,8 +402,8 @@ int main(int argc, char const *argv[]) {
 	}
 	*/
 
-	procuraClusterVazio(superbloco->pFATSectorStart, superbloco->DataSectorStart);
-		
+	printf("%u\n",procuraClusterVazio(superbloco->pFATSectorStart, superbloco->DataSectorStart));
+
 	return 0;
 }
 

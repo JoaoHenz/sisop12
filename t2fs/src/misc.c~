@@ -88,7 +88,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record,Handler* lista_arq_abe
 
 
 DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
-	int i = pFATSectorStart, index = 0;
+	int i = pFATSectorStart, index = 0, cluster_index=-1;
 	int flagAchou =0;
 	char *buffer = malloc(SECTOR_SIZE);
 	DWORD cluster;
@@ -98,37 +98,52 @@ DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
 		index = 0;
 		for(j=0; j<64; j++){
 			cluster = dWordConvert(&index, buffer);
-			printf("%u\n", val);
-			if (val == 0x00000000){
+			cluster_index++;
+			printf("%u\n", cluster);
+			if (cluster == 0x00000000){
 				flagAchou=1;
 				break;
 			}
 		}
 	}
 	if (flagAchou==1)
-		return i;
+		return cluster_index;
 
 	return -1;
 }
 
-int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
-	struct t2fs_record new_file;
-	int found, cluster, i;
-	unsigned int sector, aux;
-	BYTE *buffer;
-	DWORD next_cluster[4];
+int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file, struct t2fs_superbloco* superbloco){
+	struct t2fs_record record[4];
+	int found, cluster, i, j;
+	unsigned int sector, data_sector;
+	BYTE *buffer, *buffer_aux, *buffer_record;
+	DWORD next_cluster;
 
 	// Read starter cluster from FAT
-	aux = directory->firstCluster;
-	sector = 1 + (aux / 64);
+	sector = 1 + (directory->firstCluster / 64);
+	cluster = directory->firstCluster % 64;
 	while(!found){
 		read_sector(sector, buffer);
-		cluster = directory->firstCluster % 64;
 		for (i = 0; i < 4; i++){
-			next_cluster[i] = buffer[cluster - i];
+			next_cluster = dWordConvert(cluster, buffer);
 		}
 		// Read the cluster (N sectors per cluster, so N*4 records per cluster)
-
+		data_sector = superbloco->DataSectorStart + (cluster * (superbloco->SectorsPerCluster));
+		for (i = 0; i < superbloco->SectorsPerCluster; i++){
+			read_sector(data_sector + i, buffer);
+			for (j = 0; j < 4; j++){
+				//record[i] = (struct t2fs_record*) buffer[64*i];
+				/*if(strcmp(record[i]->name, filename)){
+					found = 1;
+					file = record[i];
+				}*/
+			}
+		}
+		// Set up the next FAT SECTOR TO CHECK!
+		sector = 1 + (next_cluster/64);
+		cluster = next_cluster % 64;
 	}
 	return -1;
 }
+
+

@@ -25,7 +25,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record,Handler* lista_arq_abe
 
 DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart);
 
-int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file, struct t2fs_superbloco* superbloco);
+int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file);
 
 
 #endif
