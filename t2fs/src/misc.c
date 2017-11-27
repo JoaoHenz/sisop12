@@ -88,7 +88,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record,Handler* lista_arq_abe
 
 
 DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
-	int i = pFATSectorStart, index = 0;
+	int i = pFATSectorStart, index = 0, cluster_index=-1;
 	int flagAchou =0;
 	char *buffer = malloc(SECTOR_SIZE);
 	DWORD cluster;
@@ -98,6 +98,7 @@ DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
 		index = 0;
 		for(j=0; j<64; j++){
 			cluster = dWordConvert(&index, buffer);
+			cluster_index++;
 			printf("%u\n", cluster);
 			if (cluster == 0x00000000){
 				flagAchou=1;
@@ -106,7 +107,7 @@ DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
 		}
 	}
 	if (flagAchou==1)
-		return i;
+		return cluster_index;
 
 	return -1;
 }

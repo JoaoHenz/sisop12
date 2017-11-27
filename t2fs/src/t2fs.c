@@ -398,8 +398,8 @@ int main(int argc, char const *argv[]) {
 	}
 	*/
 
-	procuraClusterVazio(superbloco->pFATSectorStart, superbloco->DataSectorStart);
-		
+	printf("%u\n",procuraClusterVazio(superbloco->pFATSectorStart, superbloco->DataSectorStart));
+
 	return 0;
 }
 
