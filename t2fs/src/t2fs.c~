@@ -26,16 +26,14 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 
 int identify2 (char *name, int size){ INIT;
 	int i;
-	char *ident = "Fernando Garcia Bock 242255\nLeonardo Wellausen 261571\nJoão Batista Manique Henz 242251\0";
+	char *ident = "Fernando Garcia Bock 242255\nLeonardo Wellausen 261571\nJoao Batista Manique Henz 242251\n\0";
 
 	if (size >= sizeof(ident)){
 		strcpy(name, ident);
 		return 0;
 	}
 	else{
-		for(i = 0; i < size; i++){
-			name[i] = ident[i];
-		}
+		strncpy(name, ident, size);
 		return 0;
 	}
 
@@ -127,7 +125,7 @@ FILE2 open2 (char *filename){ INIT;
 	}
 	// acessando arquivo no diretório atual
 	else{
-		getFileRecord(&currentDir, filename);
+		//getFileRecord(&currentDir, filename);
 	}
 
 	
@@ -381,9 +379,23 @@ int main(int argc, char const *argv[]) {
 	superbloco = (struct t2fs_superbloco *) malloc(256);
 	read_sector(0,(char *) superbloco);
 	char *s = malloc(256);
+	char *name = malloc(128);
+	int i;
 
 
 	printf("%hu\n",(unsigned short int) superbloco->version	);
+	printf("%hu\n",(unsigned short int) superbloco->NofSectors);
+	printf("%hu\n",(unsigned short int) superbloco->SectorsPerCluster);
+	printf("%hu\n",(unsigned short int) superbloco->pFATSectorStart);
+	printf("%hu\n",(unsigned short int) superbloco->RootDirCluster);
+	printf("%hu\n",(unsigned short int) superbloco->DataSectorStart);
+	getchar();
+	identify2(name, 30);
+	i = 0;
+	while(name[i] != '\0'){
+		printf("%c", name[i]);
+		i++;
+	}
 	return;
 }
 

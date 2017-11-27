@@ -115,7 +115,7 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 	sector = 1 + (aux / 64);
 	while(!found){
 		read_sector(sector, buffer);
-		cluster = firstCluster % 64;
+		cluster = directory->firstCluster % 64;
 		for (i = 0; i < 4; i++){
 			next_cluster[i] = buffer[cluster - i];
 		}
