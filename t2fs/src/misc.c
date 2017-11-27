@@ -91,21 +91,15 @@ DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
 	int i = pFATSectorStart, index = 0;
 	int flagAchou =0;
 	char *buffer = malloc(SECTOR_SIZE);
+	DWORD cluster;
 	while((i<DataSectorStart) && (read_sector(i, buffer)==0) && (flagAchou!=1)){
 		int j;
 		i++;
 		index = 0;
 		for(j=0; j<64; j++){
-			unsigned int val =   (unsigned int) (buffer[index++]<<24 | (buffer[index++] << 16) | (buffer[index++] << 8) |
-			 							 	(buffer[index++]));
-			/*char pointer[4];
-			pointer[0] = buffer[index++];
-			pointer[1] = buffer[index++];
-			pointer[2] = buffer[index++];
-			pointer[3] = buffer[index++];
-			unsigned int val = (unsigned int) pointer;*/
-			printf("%hu\n",(unsigned int)dWordConvert(&index, buffer));
-			if (val == 0x00000000){
+			cluster = dWordConvert(&index, buffer);
+			printf("%u\n", cluster);
+			if (cluster == 0x00000000){
 				flagAchou=1;
 				break;
 			}
