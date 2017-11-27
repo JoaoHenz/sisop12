@@ -10,6 +10,7 @@ struct t2fs_superbloco *superbloco;
 int initialized = 0, handlerCount = 0;
 char *current_path= "/";
 struct t2fs_record rootDir;
+struct t2fs_record currentDir;
 
 Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
@@ -117,8 +118,7 @@ FILE2 open2 (char *filename){ INIT;
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
 		struct t2fs_record novo_dir;
-		
-		novo_dir = getDirRecord();
+		//getDirRecord();
 		
 	}
 	// usando caminho absoluto para outro diretório
@@ -127,7 +127,7 @@ FILE2 open2 (char *filename){ INIT;
 	}
 	// acessando arquivo no diretório atual
 	else{
-		novo_record = getFileRecord(&currentDir, filename);
+		//getFileRecord(&currentDir, filename);
 	}
 
 	

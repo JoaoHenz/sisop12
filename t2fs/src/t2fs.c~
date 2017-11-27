@@ -10,6 +10,7 @@ struct t2fs_superbloco *superbloco;
 int initialized = 0, handlerCount = 0;
 char *current_path= "/";
 struct t2fs_record rootDir;
+struct t2fs_record currentDir;
 
 Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
@@ -112,6 +113,24 @@ int delete2 (char *filename){ INIT;
 
 
 FILE2 open2 (char *filename){ INIT;
+	struct t2fs_record novo_record;
+	
+	// acessando arquivo no diretório pai
+	if (filename[0] == '.' && filename[1] == '.'){
+		struct t2fs_record novo_dir;
+		//getDirRecord();
+		
+	}
+	// usando caminho absoluto para outro diretório
+	else if (filename [0] == '/'){
+
+	}
+	// acessando arquivo no diretório atual
+	else{
+		getFileRecord(&currentDir, filename);
+	}
+
+	
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
@@ -360,11 +379,11 @@ int main(int argc, char const *argv[]) {
 	printf("\nyo niggaaaaaah\n");
 	//INIT;
 	superbloco = (struct t2fs_superbloco *) malloc(256);
-
+	read_sector(0,(char *) superbloco);
 	char *s = malloc(256);
 
 
-	printf("%d\n",read_sector(256,(char *) superbloco));
+	printf("%hu\n",(unsigned short int) superbloco->version	);
 	return;
 }
 

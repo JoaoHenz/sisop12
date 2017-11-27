@@ -47,9 +47,9 @@ void initialize(int* initialized,struct t2fs_superbloco* superbloco,struct t2fs_
 		superbloco->pFATSectorStart = dWordConvert(curr_pos, buffer);
 		superbloco->RootDirCluster = dWordConvert(curr_pos, buffer);
 		superbloco->DataSectorStart = dWordConvert(curr_pos, buffer);
-		sector_aux = RootDirCluster / 4;
+		sector_aux = superbloco->RootDirCluster / 4;
 		read_sector(sector_aux, buffer);
-		cluster_pos = 64 * (RootDirCluster % 4);
+		cluster_pos = 64 * (superbloco->RootDirCluster % 4);
 		rootDir->TypeVal = buffer[cluster_pos];
 		for(i = cluster_pos; i < (MAX_FILE_NAME_SIZE + cluster_pos); i++){
 			rootDir->name[i] = buffer[MAX_FILE_NAME_SIZE + cluster_pos - i];
@@ -103,24 +103,26 @@ DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart,int sector
 	return -1;
 }
 
-struct t2fs_record getFileRecord(t2fs_record* directory, char* filename){
-	t2fs_record new_file;
-	unsigned int sector;
+int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
+	struct t2fs_record new_file;
+	int found, cluster, i;
+	unsigned int sector, aux;
 	BYTE *buffer;
 	DWORD next_cluster[4];
 	
 	// Read starter cluster from FAT
-	sector = 1 + ((*directory)->firstCluster / 64);
+	aux = directory->firstCluster;
+	sector = 1 + (aux / 64);
 	while(!found){
 		read_sector(sector, buffer);
-		cluster = firstCluster % 64;
+		cluster = directory->firstCluster % 64;
 		for (i = 0; i < 4; i++){
 			next_cluster[i] = buffer[cluster - i];
 		}
 		// Read the cluster (N sectors per cluster, so N*4 records per cluster)
 		
 	}
-	return new_file;
+	return -1;
 }
 
 
