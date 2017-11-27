@@ -391,11 +391,13 @@ int main(int argc, char const *argv[]) {
 	printf("%hu\n",(unsigned short int) superbloco->DataSectorStart);
 	//getchar();
 	//identify2(name, 128);
+	/* TESTE DE IMPRESSÃO DO NOME
 	i = 0;
 	while(name[i] != '\0'){
 		printf("%c", name[i]);
 		i++;
 	}
+	*/
 
 	procuraClusterVazio(superbloco->pFATSectorStart, superbloco->DataSectorStart);
 		

@@ -44,7 +44,6 @@ void initialize(int* initialized,struct t2fs_superbloco* superbloco,struct t2fs_
 		superbloco->DiskSize = dWordConvert(curr_pos, buffer);
 		superbloco->NofSectors  = dWordConvert(curr_pos, buffer);
 		superbloco->SectorsPerCluster = dWordConvert(curr_pos, buffer);
-		sectors_per_cluster = superbloco->SectorsPerCluster;
 		superbloco->pFATSectorStart = dWordConvert(curr_pos, buffer);
 		superbloco->RootDirCluster = dWordConvert(curr_pos, buffer);
 		superbloco->DataSectorStart = dWordConvert(curr_pos, buffer);
@@ -96,7 +95,7 @@ DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart){
 		int j;
 		i++;
 		index = 0;
-		for(j=0; j<POINTERS_PER_SECTOR; j++){
+		for(j=0; j<64; j++){
 			unsigned int val =   (unsigned int) (buffer[index++]<<24 | (buffer[index++] << 16) | (buffer[index++] << 8) |
 			 							 	(buffer[index++]));
 			/*char pointer[4];
