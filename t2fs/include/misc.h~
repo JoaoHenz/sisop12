@@ -11,7 +11,7 @@
 
 typedef struct fileHandler{
 	int fileHandle;	//handle do arquivo
-	int posFile;		//current position pointer do arquivo
+	int posFile;		//current position do arquivo
 	struct t2fs_record *fileRecord;		//pointer para o record do arquivo
 } Handler;
 
@@ -25,8 +25,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record,Handler* lista_arq_abe
 
 DWORD procuraClusterVazio(DWORD pFATSectorStart,DWORD DataSectorStart);
 
-int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file, struct t2fs_superbloco* superbloco);
-
+int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file);
 
 
 #endif
