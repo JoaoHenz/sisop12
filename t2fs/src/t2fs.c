@@ -374,7 +374,6 @@ int closedir2 (DIR2 handle){ INIT;
 
 int main(int argc, char const *argv[]) {
 	/* temp main for testin */
-	printf("\nyo niggaaaaaah\n");
 	//INIT;
 	superbloco = (struct t2fs_superbloco *) malloc(256);
 	read_sector(0,(char *) superbloco);
@@ -383,12 +382,12 @@ int main(int argc, char const *argv[]) {
 	int i;
 
 
-	printf("%hu\n",(unsigned short int) superbloco->version	);
-	printf("%hu\n",(unsigned short int) superbloco->NofSectors);
-	printf("%hu\n",(unsigned short int) superbloco->SectorsPerCluster);
-	printf("%hu\n",(unsigned short int) superbloco->pFATSectorStart);
-	printf("%hu\n",(unsigned short int) superbloco->RootDirCluster);
-	printf("%hu\n",(unsigned short int) superbloco->DataSectorStart);
+	printf("Version: %hu\n",(unsigned short int) superbloco->version	);
+	printf("Number of Sectors: %hu\n",(unsigned short int) superbloco->NofSectors);
+	printf("Sectors Per Cluster: %hu\n",(unsigned short int) superbloco->SectorsPerCluster);
+	printf("FAT Start Sector: %hu\n",(unsigned short int) superbloco->pFATSectorStart);
+	printf("Root Directory Start Cluster: %hu\n",(unsigned short int) superbloco->RootDirCluster);
+	printf("Data Start Sector: %hu\n",(unsigned short int) superbloco->DataSectorStart);
 	//getchar();
 	//identify2(name, 128);
 	/* TESTE DE IMPRESSÃO DO NOME
