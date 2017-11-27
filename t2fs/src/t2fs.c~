@@ -112,25 +112,6 @@ int delete2 (char *filename){ INIT;
 
 
 FILE2 open2 (char *filename){ INIT;
-	struct t2fs_record novo_record;
-	
-	// acessando arquivo no diretório pai
-	if (filename[0] == '.' && filename[1] == '.'){
-		struct t2fs_record novo_dir;
-		
-		novo_dir = getDirRecord();
-		
-	}
-	// usando caminho absoluto para outro diretório
-	else if (filename [0] == '/'){
-
-	}
-	// acessando arquivo no diretório atual
-	else{
-		novo_record = getFileRecord(&currentDir, filename);
-	}
-
-	
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
