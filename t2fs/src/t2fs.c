@@ -244,6 +244,8 @@ mark_EOF(DWORD cluster_index){
 }
 
 
+
+
 // FUN��ES PRINCIPAIS DA BILBIOTECA
 
 int identify2 (char *name, int size){ INIT;
@@ -528,6 +530,32 @@ int rmdir2 (char *pathname){ INIT;
 }
 
 int chdir2 (char *pathname){ INIT;
+	int i=0;j=0;profundidade_cont=0; path_is_valid=1;
+	t2fs_record* buffer_record = malloc(sizeof(struct t2fs_record));
+	char parsed_path[100][100];
+
+	while(pathname[i]!='\0'){
+		while(path[i]!='/' && path[i]!===0'\0'){
+			parsed_path[profundidade_cont][j] = path[i];
+			i++; j++;
+		}
+		parsed_path[profundidade_cont][j] = '\0';
+		j=0;
+		if(path[i]!='/') profundidade_cont++;
+		i++;
+	}
+
+	i=0;
+
+	while(i<profundidade_cont && path_is_valid ==0){ //enquanto nao tiver chegado no path e enquanto estiver seguindo paths válidos
+		path_is_valid = getFileRecord(current_dir,parsed_path[i],buffer_record);
+		if(path_is_valid==0){
+			memcpy(current_dir,buffer_record);
+		}
+	}
+
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Altera o current path
@@ -564,6 +592,39 @@ int getcwd2 (char *pathname, int size){ INIT;
 }
 
 DIR2 opendir2 (char *pathname){ INIT;
+
+
+	if (handlerCount>=MAX_LAA){
+		return -1;  //não há mais espaço para abrir arquivos
+	}
+	handlerCount++;
+
+	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+
+	// acessando arquivo no diretório pai
+	if (filename[0] == '.' && filename[1] == '.'){
+		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
+		getFileRecord(currentDir, "..", new_record);
+		getFileRecord(daddy, filename, new_record);
+	}
+	// usando caminho absoluto para outro diretório
+	else if (filename [0] == '/'){
+		return -1;
+	}
+	// acessando arquivo no diretório atual
+	else{
+		getFileRecord(currentDir, filename, new_record);
+	}
+
+	int handle = insereListaArqAbertos(new_record);
+
+	return handle;
+
+
+
+
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um diret�rio existente no disco.
