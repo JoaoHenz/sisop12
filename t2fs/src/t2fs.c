@@ -165,36 +165,20 @@ DWORD procuraClusterVazio(){
 
 int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
 	struct t2fs_record* record;
-	int found, cluster, cluster_aux, i, j;
-	unsigned int sector, data_sector;
-	BYTE *buffer, *buffer_aux, *buffer_record;
-	DWORD next_cluster;
-
-	// Read starter cluster from FAT
-	sector = 1 + (directory->firstCluster / 64);
-	cluster = directory->firstCluster % 64;
-	while(!found){
-		read_sector(sector, buffer);
-		cluster_aux = cluster;
-		for (i = 0; i < 4; i++){
-			next_cluster = dWordConvert(&cluster_aux, buffer);
+	BYTE *buffer;
+	int i, max_records;
+	
+	max_records = superbloco->SectorsPerCluster * 4;
+	
+	read_cluster(directory->firstCluster,buffer);
+	for(i = 0; i < max_records; i++){
+		memcpy(record, buffer + (i*REC_TAM), sizeof(struct t2fs_record));
+		if(strcmp(record->name, filename)){
+			free(record);
+			return i;
 		}
-		// Read the cluster (N sectors per cluster, so N*4 records per cluster)
-		data_sector = superbloco->DataSectorStart + (cluster * (superbloco->SectorsPerCluster));
-		for (i = 0; i < superbloco->SectorsPerCluster; i++){
-			read_sector(data_sector + i, buffer);
-			for (j = 0; j < 4; j++){
-				memcpy(record,buffer + (64*i),64);
-				if(strcmp(record->name, filename)){
-					found = 1;
-					file = record;
-				}
-			}
-		}
-		// Set up the next FAT SECTOR TO CHECK!
-		sector = 1 + (next_cluster/64);
-		cluster = next_cluster % 64;
 	}
+	free(record);
 	return -1;
 }
 
@@ -644,6 +628,8 @@ int main(int argc, char const *argv[]) {
 	*/
 
 	printf("%u\n",procuraClusterVazio());
+	struct t2fs_record new_file;
+	
 
 	//write_rec_to_disk(rootDir);
 
