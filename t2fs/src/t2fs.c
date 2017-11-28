@@ -13,7 +13,7 @@
 	create2 	= PARCIAL
 	open2 		= PARCIAL
 	delete2		=
-	close2		=
+	close2		= FEITO
 	read2		=
 	write2		=
 	truncate2	=
@@ -24,7 +24,7 @@
 	getcwd2		=
 	opendir2	=
 
-	STATUS: 14% Concluido
+	STATUS: 21% Concluido
 
 */
 
@@ -373,7 +373,10 @@ FILE2 open2 (char *filename){ INIT;
 
 
 int close2 (FILE2 handle){ INIT;
-	return -1;
+	free(lista_arq_abertos[handle]->fileRecord);
+	free(lista_arq_abertos[handle]);
+	handlerCount--;
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fecha o arquivo identificado pelo par�metro "handle".
 

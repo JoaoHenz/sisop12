@@ -24,6 +24,8 @@
 	getcwd2		=
 	opendir2	=
 
+	STATUS: 14% Concluido
+
 */
 
 typedef struct fileHandler{
@@ -371,7 +373,10 @@ FILE2 open2 (char *filename){ INIT;
 
 
 int close2 (FILE2 handle){ INIT;
-	return -1;
+	free(lista_arq_abertos[handle]->fileRecord);
+	free(lista_arq_abertos[handle]);
+	handlerCount--;
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fecha o arquivo identificado pelo par�metro "handle".
 
