@@ -210,8 +210,8 @@ int write_rec_to_disk(struct t2fs_record *rec){
 	return 0;
 }
 
-int insert_rec_in_dir(char *dirCluster, int free_rec, struct t2fs_record *rec){
-	memcpy(dirCluster + (free_rec*REC_TAM), rec, sizeof(struct t2fs_record));
+int insert_rec_in_dir(char *dirCluster, int rec_index, struct t2fs_record *rec){
+	memcpy(dirCluster + (rec_index*REC_TAM), rec, sizeof(struct t2fs_record));
 	return 0;
 }
 
@@ -232,15 +232,56 @@ int find_free_rec_in_dir(char *dirCluster){
 	return -1;
 }
 
-mark_EOF(DWORD cluster_index){
+int find_name_rec_in_dir(char *dirCluster, char *filename){
+	int i = 0;
+	struct t2fs_record *record = malloc(sizeof(struct t2fs_record));
+
+	for(i=0; i<RECS_IN_DIR; i++){
+		memcpy(record, dirCluster + (i*REC_TAM), sizeof(struct t2fs_record));
+		//printf("%s\n",record->name );
+		if(strcmp(record->name, filename) == 0){
+			//found record
+			free(record);
+			return i;
+		}
+	}
+	free(record);
+	return -1;
+}
+
+int mark_EOF(DWORD cluster_index){
 	char *buffer = malloc(SECTOR_SIZE);
 	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
 	read_sector(sector_index,buffer);
-	memcpy(buffer+(cluster_index%64),(DWORD *) 0xFFFFFFFF, sizeof(DWORD));
+	DWORD eof = 0xFFFFFFFF;
+	memcpy(buffer+(cluster_index%64),(DWORD *) eof, sizeof(DWORD));
 	write_sector(sector_index, buffer);
 	free(buffer);
 
 	return 0;
+}
+
+int mark_free(DWORD cluster_index){
+	char *buffer = malloc(SECTOR_SIZE);
+	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
+	read_sector(sector_index,buffer);
+	DWORD fr = 0x00000000;
+	memcpy(buffer+(cluster_index%64),(DWORD *) fr, sizeof(DWORD));
+	write_sector(sector_index, buffer);
+	free(buffer);
+
+	return 0;
+}
+
+DWORD get_next_cluster(DWORD cluster_index){
+	char *buffer = malloc(SECTOR_SIZE);
+	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
+	read_sector(sector_index,buffer);
+	DWORD point_value;
+	memcpy(&point_value,buffer+(cluster_index%64), sizeof(DWORD));
+	free(buffer);
+
+	return point_value;
 }
 
 
@@ -319,7 +360,40 @@ FILE2 create2 (char *filename){ INIT;
 }
 
 int delete2 (char *filename){ INIT;
-	return -1;
+	//TODO PATH
+
+	DWORD isOpen = findFile(filename);
+	if(isOpen != -1){
+		close2(isOpen);
+	}
+
+	struct t2fs_record* novo_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
+	struct t2fs_record *deleted_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
+
+	DWORD firstCluster = deleted_record->firstCluster;
+	free(deleted_record);
+	novo_record->TypeVal = 0x00;//tiporecord livre
+	strcpy(novo_record->name,"");
+	novo_record->bytesFileSize = 0;
+	novo_record->firstCluster = 0;
+
+	write_rec_to_disk(novo_record);
+	free(novo_record);
+	//deletado da entrada do diretório
+
+	//limpando na FAT
+	DWORD next_cluster ;
+
+
+	do {
+		next_cluster = get_next_cluster(firstCluster);
+		mark_free(firstCluster);
+		firstCluster = next_cluster;
+	} while(next_cluster != 0xFFFFFFFF);
+
+
+
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um arquivo do disco.
 		O nome do arquivo a ser apagado � aquele informado pelo par�metro "filename".
