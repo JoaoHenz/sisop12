@@ -6,19 +6,20 @@
 
 #define MAX_LAA 10
 #define REC_TAM 64
-#define RECS_IN_DIR 1024/64
+#define RECS_IN_DIR 1024/64 //16
+#define CLUSTER_SIZE 1024
 
 /*
 	identify2 = FEITO
 	create2 	= PARCIAL
 	open2 		= PARCIAL
-	delete2		=
+	delete2		= sendo feito
 	close2		= FEITO
 	read2			=
 	write2		=
 	truncate2	=
 	seek2			=
-	mkdir2		=
+	mkdir2		= sendo feito pelo JOÂO
 	rmdir2		=
 	chdir2		=
 	getcwd2		=
@@ -453,6 +454,45 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 }
 
 int mkdir2 (char *pathname){ INIT;
+	int i=0;j=0;
+	char cluster_buffer[CLUSTER_SIZE];
+	char newdirname[]
+	//filename = pega final do pathname se for o path for válido
+	if (/*path existe*/){
+	 	while(pathname[i]!='\0') i++;
+		while(pathname[i]!= '/') i--;
+		while(pathname[i]!= '\0') {newdirname[j]=pathname[i];j++;i++;}
+		newdirname[j]='\0';
+
+
+		struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
+
+		novo_record->TypeVal = 0x02;//tipo arquivo simples
+		strcpy(novo_record->name,newdirname);
+		novo_record->bytesFileSize = 0;
+		novo_record->firstCluster = procuraClusterVazio() ;
+
+		if(novo_record->firstCluster == -1){
+			//TODO tratamento limpar o que foi feito antes
+			return -1;
+		}
+
+		mark_EOF(novo_record->firstCluster);
+		write_rec_to_disk(novo_record);
+
+
+		novo_record->TypeVal = 0x00;//tipo arquivo simples
+		novo_record->name = NULL;
+		novo_record->bytesFileSize = NULL;
+		novo_record->firstCluster = NULL ;
+		for(i=0;i<RECS_IN_DIR;i++){
+			memcpy(i*REC_TAM,novo_record);
+		}
+
+		return 0;
+	}
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Criar um novo diret�rio.
