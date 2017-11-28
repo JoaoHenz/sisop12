@@ -4,9 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define BYTES_PER_SECTOR 256
-
 #define MAX_LAA 10
+#define REC_TAM 64
+#define RECS_IN_DIR 1024/64
 
 typedef struct fileHandler{
 	int fileHandle;	//handle do arquivo
@@ -55,8 +55,7 @@ DWORD dWordConvert(int *pos, BYTE *buffer){
 	return birdbird;
 }
 
-int write_cluster (DWORD cluster, char *buffer)
-{
+int write_cluster (DWORD cluster, char *buffer){
 	int offset = superbloco->DataSectorStart;
 	write_sector(offset + (cluster*4) + 0, buffer);
 	write_sector(offset + (cluster*4) + 1, buffer+256);
@@ -65,8 +64,7 @@ int write_cluster (DWORD cluster, char *buffer)
 	return 0;
 }
 
-int read_cluster (DWORD cluster, char *buffer)
-{
+int read_cluster (DWORD cluster, char *buffer){
 	int offset = superbloco->DataSectorStart;
 	read_sector(offset + (cluster*4) + 0, buffer);
 	read_sector(offset + (cluster*4) + 1, buffer+256);
@@ -200,6 +198,52 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 	return -1;
 }
 
+int write_rec_to_disk(struct t2fs_record *rec){
+	//writes given file record in the current dir
+	char *buffer = malloc(superbloco->SectorsPerCluster * SECTOR_SIZE);
+	read_cluster(currentDir->firstCluster, buffer);
+	int free_rec = find_free_rec_in_dir(buffer);
+	insert_rec_in_dir(buffer, free_rec, rec);
+
+	write_cluster(currentDir->firstCluster, buffer);
+	free(buffer);
+
+	return 0;
+}
+
+int insert_rec_in_dir(char *dirCluster, int free_rec, struct t2fs_record *rec){
+	memcpy(dirCluster + (free_rec*REC_TAM), rec, sizeof(struct t2fs_record));
+	return 0;
+}
+
+int find_free_rec_in_dir(char *dirCluster){
+	int i = 0;
+	struct t2fs_record *record = malloc(sizeof(struct t2fs_record));
+
+	for(i=0; i<RECS_IN_DIR; i++){
+		memcpy(record, dirCluster + (i*REC_TAM), sizeof(struct t2fs_record));
+		//printf("%s\n",record->name );
+		if(record->TypeVal == 0x00){
+			//free record
+			free(record);
+			return i;
+		}
+	}
+	free(record);
+	return -1;
+}
+
+mark_EOF(DWORD cluster_index){
+	char *buffer = malloc(SECTOR_SIZE);
+	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
+	read_sector(sector_index,buffer);
+	memcpy(buffer+(cluster_index%64),(DWORD *) 0xFFFFFFFF, sizeof(DWORD));
+	write_sector(sector_index, buffer);
+	free(buffer);
+
+	return 0;
+}
+
 
 // FUN��ES PRINCIPAIS DA BILBIOTECA
 
@@ -249,14 +293,17 @@ FILE2 create2 (char *filename){ INIT;
 	novo_record->bytesFileSize = 0;
 	novo_record->firstCluster = procuraClusterVazio() ;
 
-	if(novo_record->firstCluster != -1){
-		int handle = insereListaArqAbertos(novo_record);
-		if(handle)
-			return handle;
+	if(novo_record->firstCluster == -1){
+		//TODO tratamento limpar o que foi feito antes
+		return -1;
 	}
+	int handle = insereListaArqAbertos(novo_record);
+	mark_EOF(novo_record->firstCluster);
+	write_rec_to_disk(novo_record);
 
-	//TODO arrumar estrutura de diretório
-
+	if(handle)
+		return handle;
+	else
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o: Criar um novo arquivo.
@@ -560,7 +607,8 @@ int main(int argc, char const *argv[]) {
 
 	rootDir = (struct t2fs_record*) malloc(sizeof(struct t2fs_record));
 	rootDir->TypeVal = 0x02;
-	rootDir->name = "root";
+	strcpy(rootDir->name, "root");
+	//rootDir->name = rootName;
 	rootDir->bytesFileSize = (superbloco->SectorsPerCluster) * (SECTOR_SIZE);
 	rootDir->firstCluster = superbloco->RootDirCluster;
 
@@ -596,6 +644,8 @@ int main(int argc, char const *argv[]) {
 	*/
 
 	printf("%u\n",procuraClusterVazio());
+
+	//write_rec_to_disk(rootDir);
 
 	return 0;
 }
