@@ -52,6 +52,15 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 ********************************************************nigger*****************
 */
 
+DWORD findFile(char* filename){
+	unsigned int i;
+	for(i = 0; i < 10; i++){
+		if (strcmp(filename, lista_arq_abertos[i]->fileRecord->name) == 0){
+			return i;
+		}
+	}
+}
+
 WORD wordConvert(int *pos, BYTE *buffer){
 	int i;
 	WORD bird, auxbuffer[2] = {0};

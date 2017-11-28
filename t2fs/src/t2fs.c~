@@ -13,7 +13,7 @@
 	create2 	= PARCIAL
 	open2 		= PARCIAL
 	delete2		=
-	close2		=
+	close2		= FEITO
 	read2		=
 	write2		=
 	truncate2	=
@@ -24,7 +24,7 @@
 	getcwd2		=
 	opendir2	=
 
-	STATUS: 14% Concluido
+	STATUS: 21% Concluido
 
 */
 
@@ -51,6 +51,15 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 *******************FUNÇÃOS AUXILIARES******************************************
 ********************************************************nigger*****************
 */
+
+DWORD findFile(char* filename){
+	unsigned int i;
+	for(i = 0; i < 10; i++){
+		if (strcmp(filename, lista_arq_abertos[i]->fileRecord->name) == 0){
+			return i;
+		}
+	}
+}
 
 WORD wordConvert(int *pos, BYTE *buffer){
 	int i;
