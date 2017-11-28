@@ -153,9 +153,9 @@ DWORD procuraClusterVazio(){
 int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
 	BYTE *buffer = malloc(superbloco->SectorsPerCluster * SECTOR_SIZE);
 	int i, max_records;
-	
+
 	max_records = superbloco->SectorsPerCluster * 4;
-	
+
 	read_cluster(directory->firstCluster,buffer);
 	for(i = 0; i < max_records; i++){
 		memcpy(file, buffer + (i*REC_TAM), sizeof(struct t2fs_record));
@@ -306,7 +306,15 @@ int delete2 (char *filename){ INIT;
 
 
 FILE2 open2 (char *filename){ INIT;
+
+	if (handlerCount>=MAX_LAA){
+		return -1;  //não há mais espaço para abrir arquivos
+	}
+	handlerCount++;
+
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+
+
 
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
@@ -320,8 +328,14 @@ FILE2 open2 (char *filename){ INIT;
 	// acessando arquivo no diretório atual
 	else{
 		getFileRecord(currentDir, filename, new_record);
-		return 0;
 	}
+
+	int handle = insereListaArqAbertos(new_record);
+
+	if(handle)
+		return handle;
+	else
+	return -1;
 
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
