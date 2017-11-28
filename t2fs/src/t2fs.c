@@ -697,6 +697,10 @@ DIR2 opendir2 (char *pathname){ INIT;
 	if((flag==0)&&(handlerCount<MAX_LAA)){
 		handlerCount++;
 		struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+		int handle = insereListaArqAbertos(currentDir);
+
+		memcpy(currentDir,currentDirAntigo, REC_TAM);
+		return handle;
 	}
 
 
