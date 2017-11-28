@@ -319,25 +319,23 @@ int delete2 (char *filename){ INIT;
 
 
 FILE2 open2 (char *filename){ INIT;
-	struct t2fs_record novo_record;
+	struct t2fs_record* new_record;
 
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
-		struct t2fs_record novo_dir;
-		//getDirRecord();
+		return -1;
 
 	}
 	// usando caminho absoluto para outro diretório
 	else if (filename [0] == '/'){
-
+		return -1;
 	}
 	// acessando arquivo no diretório atual
 	else{
-		//getFileRecord(&currentDir, filename);
+		getFileRecord(currentDir, filename, new_record);
+		return 0;
 	}
 
-
-	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
 		O nome desse novo arquivo � aquele informado pelo par�metro "filename".
@@ -625,8 +623,10 @@ int main(int argc, char const *argv[]) {
 	*/
 
 	printf("%u\n",procuraClusterVazio());
-	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
+
 	
+	/*
+	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
 	getFileRecord(rootDir,"file1.txt",new_file);
 	printf("File Type: %x\n", new_file->TypeVal);
 	printf("File Name: ");
@@ -637,9 +637,9 @@ int main(int argc, char const *argv[]) {
 	}
 	printf("\n");
 	printf("File Size: %u\n", new_file->bytesFileSize);
-	printf("First Cluster: %u\n", new_file->firstCluster);
+	printf("First Cluster: %u\n", new_file->firstCluster);*/
 
-	free(new_file);
+
 	//write_rec_to_disk(rootDir);
 
 	return 0;
