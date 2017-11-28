@@ -24,7 +24,7 @@
 	getcwd2		=
 	opendir2	=
 
-	STATUS: 21% Concluido
+	STATUS: 26% Concluido
 
 */
 
@@ -51,6 +51,12 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 *******************FUNÇÃOS AUXILIARES******************************************
 ********************************************************nigger*****************
 */
+int findDir(char* filename){
+	return -1;
+}
+
+
+
 
 DWORD findFile(char* filename){
 	unsigned int i;
@@ -59,6 +65,7 @@ DWORD findFile(char* filename){
 			return i;
 		}
 	}
+	return -1;
 }
 
 WORD wordConvert(int *pos, BYTE *buffer){
@@ -343,12 +350,11 @@ FILE2 open2 (char *filename){ INIT;
 
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 
-
-
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
-		return -1;
-
+		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
+		getFileRecord(currentDir, "..", new_record);
+		getFileRecord(daddy, filename, new_record);
 	}
 	// usando caminho absoluto para outro diretório
 	else if (filename [0] == '/'){

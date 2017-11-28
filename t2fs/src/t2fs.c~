@@ -59,6 +59,7 @@ DWORD findFile(char* filename){
 			return i;
 		}
 	}
+	return -1;
 }
 
 WORD wordConvert(int *pos, BYTE *buffer){
@@ -343,12 +344,11 @@ FILE2 open2 (char *filename){ INIT;
 
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 
-
-
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
-		return -1;
-
+		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
+		getFileRecord(currentDir, "..", new_record);
+		getFileRecord(daddy, filename, new_record);
 	}
 	// usando caminho absoluto para outro diretório
 	else if (filename [0] == '/'){
