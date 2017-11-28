@@ -533,9 +533,9 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 }
 
 int mkdir2 (char *pathname){ INIT;
-	int i=0;j=0;
+	int i=0, j=0;
 	char cluster_buffer[CLUSTER_SIZE];
-	char newdirname[100]; newdirpath[1000];
+	char newdirname[100], newdirpath[1000];
 	//filename = pega final do pathname se for o path for válido
 
 	strcpy(newdirpath,pathname);
@@ -568,11 +568,11 @@ int mkdir2 (char *pathname){ INIT;
 
 
 		novo_record->TypeVal = 0x00;//tipo arquivo simples
-		novo_record->name = NULL;
-		novo_record->bytesFileSize = NULL;
-		novo_record->firstCluster = NULL ;
+		strcpy(novo_record->name ,"");
+		novo_record->bytesFileSize = 0;
+		novo_record->firstCluster = 0 ;
 		for(i=0;i<RECS_IN_DIR;i++){
-			memcpy(i*REC_TAM,novo_record);
+			memcpy(cluster_buffer + (i*REC_TAM),novo_record, REC_TAM);
 		}
 
 		return 0;
@@ -614,27 +614,27 @@ int rmdir2 (char *pathname){ INIT;
 }
 
 int chdir2 (char *pathname){ INIT;
-	int i=0;j=0;profundidade_cont=0; path_is_valid=1;
-	t2fs_record* buffer_record = malloc(sizeof(struct t2fs_record));
+	int i=0,j=0,profundidade_cont=0, path_is_valid=1;
+	struct t2fs_record* buffer_record = malloc(sizeof(struct t2fs_record));
 	char parsed_path[100][100];
 
 	while(pathname[i]!='\0'){
-		while(path[i]!='/' && path[i]!===0'\0'){
-			parsed_path[profundidade_cont][j] = path[i];
+		while((pathname[i]!='/') && (pathname[i]!='\0')){
+			parsed_path[profundidade_cont][j] = pathname[i];
 			i++; j++;
 		}
 		parsed_path[profundidade_cont][j] = '\0';
 		j=0;
-		if(path[i]!='/') profundidade_cont++;
+		if(pathname[i]!='/') profundidade_cont++;
 		i++;
 	}
 
 	i=0;
 
 	while(i<profundidade_cont && path_is_valid ==0){ //enquanto nao tiver chegado no path e enquanto estiver seguindo paths válidos
-		path_is_valid = getFileRecord(current_dir,parsed_path[i],buffer_record);
+		path_is_valid = getFileRecord(currentDir,parsed_path[i],buffer_record);
 		if(path_is_valid==0){
-			memcpy(current_dir,buffer_record);
+			memcpy(currentDir,buffer_record, REC_TAM);
 		}
 	}
 
@@ -676,7 +676,7 @@ int getcwd2 (char *pathname, int size){ INIT;
 }
 
 DIR2 opendir2 (char *pathname){ INIT;
-
+/*
 
 	if (handlerCount>=MAX_LAA){
 		return -1;  //não há mais espaço para abrir arquivos
@@ -686,7 +686,7 @@ DIR2 opendir2 (char *pathname){ INIT;
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 
 	// acessando arquivo no diretório pai
-	if (filename[0] == '.' && filename[1] == '.'){
+	if ((filename[0] == '.') && (filename[1] == '.')){
 		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
 		getFileRecord(currentDir, "..", new_record);
 		getFileRecord(daddy, filename, new_record);
@@ -702,7 +702,7 @@ DIR2 opendir2 (char *pathname){ INIT;
 
 	int handle = insereListaArqAbertos(new_record);
 
-	return handle;
+	return handle;*/
 
 
 
