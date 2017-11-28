@@ -631,15 +631,15 @@ int main(int argc, char const *argv[]) {
 	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
 	
 	getFileRecord(rootDir,"file1.txt",new_file);
-	printf("File Type: %x", new_file->TypeVal);
+	printf("File Type: %x\n", new_file->TypeVal);
 	printf("File Name: ");
 	while(new_file->name[i] != '\0'){
 		printf("%c",(unsigned char) new_file->name[i]);
 		i++;
 	}
 	printf("\n");
-	printf("File Size: %u", new_file->bytesFileSize);
-	printf("First Cluster: %u", new_file->firstCluster);
+	printf("File Size: %u\n", new_file->bytesFileSize);
+	printf("First Cluster: %u\n", new_file->firstCluster);
 
 	free(new_file);
 	//write_rec_to_disk(rootDir);
