@@ -582,7 +582,7 @@ int mkdir2 (char *pathname){ INIT;
 		novo_record->bytesFileSize = 0;
 		novo_record->firstCluster = 0 ;
 		for(i=0;i<RECS_IN_DIR;i++){
-			memcpy(cluster_buffer + (i*REC_TAM),novo_record, REC_TAM);
+			memcpy(cluster_buffer[i*REC_TAM],novo_record, REC_TAM);
 		}
 
 		return 0;
@@ -648,6 +648,8 @@ int chdir2 (char *pathname){ INIT;
 		}
 	}
 
+	if(path_is_valid==0)
+		return 0;
 
 
 	return -1;
@@ -686,33 +688,10 @@ int getcwd2 (char *pathname, int size){ INIT;
 }
 
 DIR2 opendir2 (char *pathname){ INIT;
-/*
 
-	if (handlerCount>=MAX_LAA){
-		return -1;  //não há mais espaço para abrir arquivos
-	}
-	handlerCount++;
 
-	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 
-	// acessando arquivo no diretório pai
-	if ((filename[0] == '.') && (filename[1] == '.')){
-		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
-		getFileRecord(currentDir, "..", new_record);
-		getFileRecord(daddy, filename, new_record);
-	}
-	// usando caminho absoluto para outro diretório
-	else if (filename [0] == '/'){
-		return -1;
-	}
-	// acessando arquivo no diretório atual
-	else{
-		getFileRecord(currentDir, filename, new_record);
-	}
 
-	int handle = insereListaArqAbertos(new_record);
-
-	return handle;*/
 
 	return -1;
 	/*-----------------------------------------------------------------------------
