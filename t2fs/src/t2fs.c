@@ -332,10 +332,7 @@ FILE2 open2 (char *filename){ INIT;
 
 	int handle = insereListaArqAbertos(new_record);
 
-	if(handle)
-		return handle;
-	else
-	return -1;
+	return handle;
 
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
@@ -588,7 +585,7 @@ int main(int argc, char const *argv[]) {
 
 	char *s = malloc(256);
 	char *name = malloc(128);
-	int i;
+	int i, j = 0;
 
 	printf("Id:");
 	for (i = 0; i < 4; i++){
@@ -613,9 +610,14 @@ int main(int argc, char const *argv[]) {
 	}
 	*/
 
-	printf("%u\n",procuraClusterVazio());
-
-	open2("file1.txt");
+	i = open2("file1.txt");
+	printf("File is called: ");
+	while(lista_arq_abertos[i]->fileRecord->name[j] != '\0'){
+		printf("%c",(unsigned char) lista_arq_abertos[i]->fileRecord->name[j]);
+		j++;
+	}
+	printf("\n");
+	
 	/*
 	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
 	getFileRecord(rootDir,"file1.txt",new_file);
