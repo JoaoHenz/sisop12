@@ -514,7 +514,15 @@ int truncate2 (FILE2 handle){ INIT;
 
 int seek2 (FILE2 handle, unsigned int offset){ INIT;
 
+	if((handle<MAX_LAA)&&(handle>=0)){
+		if(offset!=-1){
+			lista_arq_abertos[handle]->posFile = offset
+		}
+		else{
+			lista_arq_abertos[handle]->posFile = lista_arq_abertos[handle]->fileRecord->bytesFileSize+1;
+		}
 
+	}
 
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -703,11 +711,6 @@ DIR2 opendir2 (char *pathname){ INIT;
 	int handle = insereListaArqAbertos(new_record);
 
 	return handle;*/
-
-
-
-
-
 
 	return -1;
 	/*-----------------------------------------------------------------------------
