@@ -517,9 +517,11 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 	if((handle<MAX_LAA)&&(handle>=0)){
 		if(offset!=-1){
 			lista_arq_abertos[handle]->posFile = offset
+			return 0;
 		}
 		else{
 			lista_arq_abertos[handle]->posFile = lista_arq_abertos[handle]->fileRecord->bytesFileSize+1;
+			return 0;
 		}
 
 	}
