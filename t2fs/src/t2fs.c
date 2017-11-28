@@ -38,7 +38,7 @@ typedef struct fileHandler{
 
 struct t2fs_superbloco *superbloco;
 int initialized = 0, handlerCount = 0;
-char *current_path= "/";
+char *current_path;
 struct t2fs_record *rootDir;
 struct t2fs_record *currentDir;
 
@@ -153,6 +153,8 @@ void initialize(){
 		rootDir->firstCluster = superbloco->RootDirCluster;
 
 		currentDir = rootDir;
+		current_path = malloc(5);
+		strcpy(current_path, "/");
 	}
 }
 
@@ -268,6 +270,21 @@ int find_free_rec_in_dir(char *dirCluster){
 	}
 	free(record);
 	return -1;
+}
+
+int print_dir(struct t2fs_record *dir){
+	int i = 0;
+	struct t2fs_record *record = malloc(sizeof(struct t2fs_record));
+	char *dirCluster = malloc(CLUSTER_SIZE);
+	read_cluster(dir->firstCluster, dirCluster);
+
+	for(i=0; i<RECS_IN_DIR; i++){
+		memcpy(record, dirCluster + (i*REC_TAM), sizeof(struct t2fs_record));
+		printf("%s\n",record->name );
+	}
+	free(record);
+	free(dirCluster);
+	return 0;
 }
 
 int find_name_rec_in_dir(char *dirCluster, char *filename){
@@ -779,7 +796,7 @@ int rmdir2 (char *pathname){ INIT;
 }
 
 int chdir2 (char *pathname){ INIT;
-	int i=0,j=0,profundidade_cont=0, path_is_valid=1;
+	/*int i=0,j=0,profundidade_cont=0, path_is_valid=1;
 	struct t2fs_record* buffer_record = malloc(sizeof(struct t2fs_record));
 	char parsed_path[100][100];
 
@@ -804,10 +821,46 @@ int chdir2 (char *pathname){ INIT;
 	}
 
 	if(path_is_valid==0)
-		return 0;
+		return 0;*/
+
+		char *aux_path = malloc(64);
+		char *subdir = malloc(64);
+		char *remainder = malloc(64);
+		char *nullstring = "\0";
+		//struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+		struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
 
 
-	return -1;
+		parsePath(pathname, subdir, remainder);
+		//printf("%s\n%s\n\n", subdir,remainder);
+		if(pathname[0] == '.'){ //
+			if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
+		}
+		else{
+			if (getFileRecord(rootDir, subdir, record_aux) == -1) return -1;
+		}
+		while(strcmp(remainder, nullstring) != 0){
+			strcpy(subdir, nullstring);
+			strcpy(aux_path, remainder);
+			strcpy(remainder, nullstring);
+			parsePath(aux_path, subdir, remainder);
+			//printf("%s\n%s\n\n", subdir, remainder);
+			if (getFileRecord(record_aux, subdir, record_aux) == -1) return -1;
+		}
+
+		memcpy(currentDir, record_aux, REC_TAM);
+		free(record_aux);
+		free(aux_path);
+		free(subdir);
+		free(remainder);
+
+		/*free(current_path);
+		current_path = malloc(strlen(pathname));
+		printf("aa :%s\n%s\n", current_path, pathname);
+		strcpy(current_path, pathname);*/
+
+
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Altera o current path
 		O novo caminho do diret�rio a ser usado como current path � aquele informado pelo par�metro "pathname".
@@ -831,7 +884,7 @@ int getcwd2 (char *pathname, int size){ INIT;
 		return -1;  //size é muito pequeno
 	}
 
-	strcpy(pathname, current_path);
+	memcpy(pathname, current_path, strlen(current_path));
 	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fun��o que informa o diret�rio atual de trabalho.
@@ -924,7 +977,6 @@ int main(int argc, char const *argv[]) {
 
 
 
-	char *s = malloc(256);
 	char *name = malloc(128);
 	int i, j = 0;
 
@@ -971,8 +1023,14 @@ int main(int argc, char const *argv[]) {
 	printf("Teste 1 Name: %s\n", testrec2->name);
 	*/
 
+	char *s = malloc(256);
+	chdir2("./dir1");
+	print_dir(currentDir);
+	chdir2("./root");
 	getcwd2(s, 256);
-	printf("%s\n", s);
+	//printf("%s\n", s);
+	//chdir2("../dir1");
+	print_dir(currentDir);
 
 	return 0;
 }
