@@ -164,8 +164,8 @@ DWORD procuraClusterVazio(){
 }
 
 int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
-	struct t2fs_record* record;
-	BYTE *buffer;
+	struct t2fs_record* record = malloc(sizeof(struct t2fs_record));
+	BYTE *buffer = malloc(superbloco->SectorsPerCluster * SECTOR_SIZE);
 	int i, max_records;
 	
 	max_records = superbloco->SectorsPerCluster * 4;
@@ -174,7 +174,7 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 	for(i = 0; i < max_records; i++){
 		memcpy(record, buffer + (i*REC_TAM), sizeof(struct t2fs_record));
 		if(strcmp(record->name, filename)){
-			free(record);
+			file = record;
 			return i;
 		}
 	}
@@ -628,9 +628,20 @@ int main(int argc, char const *argv[]) {
 	*/
 
 	printf("%u\n",procuraClusterVazio());
-	struct t2fs_record new_file;
+	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
 	
+	getFileRecord(rootDir,"file1.txt",new_file);
+	printf("File Type: %x\n", new_file->TypeVal);
+	printf("File Name: ");
+	while(new_file->name[i] != '\0'){
+		printf("%c",(unsigned char) new_file->name[i]);
+		i++;
+	}
+	printf("\n");
+	printf("File Size: %u\n", new_file->bytesFileSize);
+	printf("First Cluster: %u\n", new_file->firstCluster);
 
+	free(new_file);
 	//write_rec_to_disk(rootDir);
 
 	return 0;
