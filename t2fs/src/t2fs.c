@@ -850,20 +850,19 @@ int getcwd2 (char *pathname, int size){ INIT;
 }
 
 DIR2 opendir2 (char *pathname){ INIT;
-	/*struct t2fs_record* currentDirAntigo = malloc(sizeof(struct t2fs_record));
+	struct t2fs_record* currentDirAntigo = malloc(sizeof(struct t2fs_record));
 	int flag;
 
 	memcpy(currentDirAntigo,currentDir, REC_TAM);
 	flag =chdir2(pathname);
 
 	if((flag==0)&&(handlerCount<MAX_LAA)){
-		handlerCount++;
 		struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
-		int handle = insereListaArqAbertos(currentDir);
+		int handle = insereListaArqAbertos(new_record,currentDir);
 
 		memcpy(currentDir,currentDirAntigo, REC_TAM);
 		return handle;
-	}*/
+	}
 
 
 	return -1;
