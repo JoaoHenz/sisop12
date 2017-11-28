@@ -55,6 +55,26 @@ DWORD dWordConvert(int *pos, BYTE *buffer){
 	return birdbird;
 }
 
+int write_cluster (DWORD cluster, char *buffer)
+{
+	int offset = superbloco->DataSectorStart;
+	write_sector(offset + (cluster*4) + 0, buffer);
+	write_sector(offset + (cluster*4) + 1, buffer+256);
+	write_sector(offset + (cluster*4) + 2, buffer+512);
+	write_sector(offset + (cluster*4) + 3, buffer+768);
+	return 0;
+}
+
+int read_cluster (DWORD cluster, char *buffer)
+{
+	int offset = superbloco->DataSectorStart;
+	read_sector(offset + (cluster*4) + 0, buffer);
+	read_sector(offset + (cluster*4) + 1, buffer+256);
+	read_sector(offset + (cluster*4) + 2, buffer+512);
+	read_sector(offset + (cluster*4) + 3, buffer+768);
+	return 0;
+}
+
 void initialize(){
 	int i, *curr_pos, sector_aux, cluster_pos;
 	BYTE *buffer = (char*) malloc(SECTOR_SIZE);
