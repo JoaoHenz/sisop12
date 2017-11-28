@@ -513,6 +513,9 @@ int truncate2 (FILE2 handle){ INIT;
 }
 
 int seek2 (FILE2 handle, unsigned int offset){ INIT;
+
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Reposiciona o contador de posi��es (current pointer) do arquivo identificado por "handle".
@@ -532,9 +535,16 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 int mkdir2 (char *pathname){ INIT;
 	int i=0;j=0;
 	char cluster_buffer[CLUSTER_SIZE];
-	char newdirname[]
+	char newdirname[100]; newdirpath[1000];
 	//filename = pega final do pathname se for o path for válido
-	if (/*path existe*/){
+
+	strcpy(newdirpath,pathname);
+	while(newdirpath[i]!='\0') i++;
+	while(newdirpath[i]!= '/') i--;
+	newdirpath[i]= '\0';
+
+	if (chdir2(newdirpath)==0){
+		i=0;j=0;
 	 	while(pathname[i]!='\0') i++;
 		while(pathname[i]!= '/') i--;
 		while(pathname[i]!= '\0') {newdirname[j]=pathname[i];j++;i++;}
