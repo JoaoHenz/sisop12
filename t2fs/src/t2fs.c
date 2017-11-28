@@ -537,6 +537,17 @@ int main(int argc, char const *argv[]) {
 	//INIT;
 	superbloco = (struct t2fs_superbloco *) malloc(256);
 	read_sector(0,(char *) superbloco);
+
+	rootDir = (struct t2fs_record*) malloc(sizeof(struct t2fs_record));
+	rootDir->TypeVal = 0x02;
+	rootDir->name = "root";
+	rootDir->bytesFileSize = (superbloco->SectorsPerCluster) * (SECTOR_SIZE);
+	rootDir->firstCluster = superbloco->RootDirCluster;
+
+	currentDir = rootDir;
+
+
+
 	char *s = malloc(256);
 	char *name = malloc(128);
 	int i;
