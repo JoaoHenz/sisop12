@@ -164,7 +164,7 @@ DWORD procuraClusterVazio(){
 }
 
 int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
-	struct t2fs_record record[4];
+	struct t2fs_record* record;
 	int found, cluster, cluster_aux, i, j;
 	unsigned int sector, data_sector;
 	BYTE *buffer, *buffer_aux, *buffer_record;
@@ -184,11 +184,11 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 		for (i = 0; i < superbloco->SectorsPerCluster; i++){
 			read_sector(data_sector + i, buffer);
 			for (j = 0; j < 4; j++){
-				//record[i] = (struct t2fs_record*) buffer[64*i];
-				/*if(strcmp(record[i]->name, filename)){
+				memcpy(record,buffer + (64*i),64);
+				if(strcmp(record->name, filename)){
 					found = 1;
-					file = record[i];
-				}*/
+					file = record;
+				}
 			}
 		}
 		// Set up the next FAT SECTOR TO CHECK!
