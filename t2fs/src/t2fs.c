@@ -9,15 +9,15 @@
 #define RECS_IN_DIR 1024/64
 
 /*
-	identify2 	= FEITO
+	identify2 = FEITO
 	create2 	= PARCIAL
 	open2 		= PARCIAL
 	delete2		=
 	close2		= FEITO
-	read2		=
+	read2			=
 	write2		=
 	truncate2	=
-	seek2		=
+	seek2			=
 	mkdir2		=
 	rmdir2		=
 	chdir2		=
@@ -54,9 +54,6 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 int findDir(char* filename){
 	return -1;
 }
-
-
-
 
 DWORD findFile(char* filename){
 	unsigned int i;
@@ -128,7 +125,6 @@ void initialize(){
 	}
 }
 
-
 int insereListaArqAbertos(struct t2fs_record* novo_record){
 	int i=0;
 
@@ -158,8 +154,6 @@ int insereListaArqAbertos(struct t2fs_record* novo_record){
 	return -1; //execução acabou com erros
 
 }
-
-
 
 DWORD procuraClusterVazio(){
 	int i = superbloco->pFATSectorStart, index = 0, cluster_index=-1;
@@ -251,7 +245,6 @@ mark_EOF(DWORD cluster_index){
 
 // FUN��ES PRINCIPAIS DA BILBIOTECA
 
-
 int identify2 (char *name, int size){ INIT;
 	int i;
 	char *ident = "Fernando Garcia Bock 242255\nLeonardo Wellausen 261571\nJoao Batista Manique Henz 242251\n\0";
@@ -281,8 +274,6 @@ int identify2 (char *name, int size){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 FILE2 create2 (char *filename){ INIT;
 	if (handlerCount>=MAX_LAA){
@@ -324,8 +315,6 @@ FILE2 create2 (char *filename){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int delete2 (char *filename){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -338,8 +327,6 @@ int delete2 (char *filename){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 FILE2 open2 (char *filename){ INIT;
 
@@ -385,8 +372,6 @@ FILE2 open2 (char *filename){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int close2 (FILE2 handle){ INIT;
 	free(lista_arq_abertos[handle]->fileRecord);
 	free(lista_arq_abertos[handle]);
@@ -401,8 +386,6 @@ int close2 (FILE2 handle){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	return -1;
@@ -421,8 +404,6 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int write2 (FILE2 handle, char *buffer, int size){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -439,8 +420,6 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int truncate2 (FILE2 handle){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -455,8 +434,6 @@ int truncate2 (FILE2 handle){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int seek2 (FILE2 handle, unsigned int offset){ INIT;
 	return -1;
@@ -475,8 +452,6 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int mkdir2 (char *pathname){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -492,8 +467,6 @@ int mkdir2 (char *pathname){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int rmdir2 (char *pathname){ INIT;
 	return -1;
@@ -514,8 +487,6 @@ int rmdir2 (char *pathname){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int chdir2 (char *pathname){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -533,8 +504,6 @@ int chdir2 (char *pathname){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int getcwd2 (char *pathname, int size){ INIT;
 	return -1;
@@ -554,8 +523,6 @@ int getcwd2 (char *pathname, int size){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 DIR2 opendir2 (char *pathname){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -572,9 +539,6 @@ DIR2 opendir2 (char *pathname){ INIT;
 		Em caso de erro, ser� retornado um valor negativo.
 	-----------------------------------------------------------------------------*/
 }
-
-
-
 
 int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 	return -1;
@@ -599,8 +563,6 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 		#define	END_OF_DIR	1
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int closedir2 (DIR2 handle){ INIT;
 	return -1;
@@ -655,7 +617,7 @@ int main(int argc, char const *argv[]) {
 		j++;
 	}
 	printf("\n");
-	
+
 	/*
 	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
 	getFileRecord(rootDir,"file1.txt",new_file);
