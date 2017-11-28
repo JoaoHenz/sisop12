@@ -176,7 +176,6 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 			return 0;
 		}
 	}
-	free(record);
 	return -1;
 }
 

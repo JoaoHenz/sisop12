@@ -164,7 +164,6 @@ DWORD procuraClusterVazio(){
 }
 
 int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
-	struct t2fs_record* record = malloc(sizeof(struct t2fs_record));
 	BYTE *buffer = malloc(superbloco->SectorsPerCluster * SECTOR_SIZE);
 	int i, max_records;
 	
@@ -172,10 +171,9 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 	
 	read_cluster(directory->firstCluster,buffer);
 	for(i = 0; i < max_records; i++){
-		memcpy(record, buffer + (i*REC_TAM), sizeof(struct t2fs_record));
-		if(strcmp(record->name, filename)){
-			file = record;
-			return i;
+		memcpy(file, buffer + (i*REC_TAM), sizeof(struct t2fs_record));
+		if(strcmp(file->name, filename)){
+			return 0;
 		}
 	}
 	free(record);
