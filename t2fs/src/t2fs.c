@@ -6,25 +6,26 @@
 
 #define MAX_LAA 10
 #define REC_TAM 64
-#define RECS_IN_DIR 1024/64
+#define RECS_IN_DIR 1024/64 //16
+#define CLUSTER_SIZE 1024
 
 /*
-	identify2 	= FEITO
+	identify2 = FEITO
 	create2 	= PARCIAL
 	open2 		= PARCIAL
-	delete2		=
+	delete2		= sendo feito
 	close2		= FEITO
-	read2		=
+	read2			=
 	write2		=
 	truncate2	=
-	seek2		=
-	mkdir2		=
+	seek2			=
+	mkdir2		= sendo feito pelo JOÂO
 	rmdir2		=
 	chdir2		=
 	getcwd2		=
 	opendir2	=
 
-	STATUS: 21% Concluido
+	STATUS: 26% Concluido
 
 */
 
@@ -51,6 +52,9 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 *******************FUNÇÃOS AUXILIARES******************************************
 ********************************************************nigger*****************
 */
+int findDir(char* filename){
+	return -1;
+}
 
 DWORD findFile(char* filename){
 	unsigned int i;
@@ -122,7 +126,6 @@ void initialize(){
 	}
 }
 
-
 int insereListaArqAbertos(struct t2fs_record* novo_record){
 	int i=0;
 
@@ -152,8 +155,6 @@ int insereListaArqAbertos(struct t2fs_record* novo_record){
 	return -1; //execução acabou com erros
 
 }
-
-
 
 DWORD procuraClusterVazio(){
 	int i = superbloco->pFATSectorStart, index = 0, cluster_index=-1;
@@ -286,7 +287,6 @@ DWORD get_next_cluster(DWORD cluster_index){
 
 // FUN��ES PRINCIPAIS DA BILBIOTECA
 
-
 int identify2 (char *name, int size){ INIT;
 	int i;
 	char *ident = "Fernando Garcia Bock 242255\nLeonardo Wellausen 261571\nJoao Batista Manique Henz 242251\n\0";
@@ -316,8 +316,6 @@ int identify2 (char *name, int size){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 FILE2 create2 (char *filename){ INIT;
 	if (handlerCount>=MAX_LAA){
@@ -358,8 +356,6 @@ FILE2 create2 (char *filename){ INIT;
 		Em caso de erro, deve ser retornado um valor negativo.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int delete2 (char *filename){ INIT;
 	//TODO PATH
@@ -407,8 +403,6 @@ int delete2 (char *filename){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 FILE2 open2 (char *filename){ INIT;
 
 	if (handlerCount>=MAX_LAA){
@@ -418,12 +412,11 @@ FILE2 open2 (char *filename){ INIT;
 
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 
-
-
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
-		return -1;
-
+		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
+		getFileRecord(currentDir, "..", new_record);
+		getFileRecord(daddy, filename, new_record);
 	}
 	// usando caminho absoluto para outro diretório
 	else if (filename [0] == '/'){
@@ -454,8 +447,6 @@ FILE2 open2 (char *filename){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int close2 (FILE2 handle){ INIT;
 	free(lista_arq_abertos[handle]->fileRecord);
 	free(lista_arq_abertos[handle]);
@@ -470,8 +461,6 @@ int close2 (FILE2 handle){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	return -1;
@@ -490,8 +479,6 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int write2 (FILE2 handle, char *buffer, int size){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -508,8 +495,6 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int truncate2 (FILE2 handle){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -524,8 +509,6 @@ int truncate2 (FILE2 handle){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int seek2 (FILE2 handle, unsigned int offset){ INIT;
 	return -1;
@@ -544,9 +527,46 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int mkdir2 (char *pathname){ INIT;
+	int i=0;j=0;
+	char cluster_buffer[CLUSTER_SIZE];
+	char newdirname[]
+	//filename = pega final do pathname se for o path for válido
+	if (/*path existe*/){
+	 	while(pathname[i]!='\0') i++;
+		while(pathname[i]!= '/') i--;
+		while(pathname[i]!= '\0') {newdirname[j]=pathname[i];j++;i++;}
+		newdirname[j]='\0';
+
+
+		struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
+
+		novo_record->TypeVal = 0x02;//tipo arquivo simples
+		strcpy(novo_record->name,newdirname);
+		novo_record->bytesFileSize = 0;
+		novo_record->firstCluster = procuraClusterVazio() ;
+
+		if(novo_record->firstCluster == -1){
+			//TODO tratamento limpar o que foi feito antes
+			return -1;
+		}
+
+		mark_EOF(novo_record->firstCluster);
+		write_rec_to_disk(novo_record);
+
+
+		novo_record->TypeVal = 0x00;//tipo arquivo simples
+		novo_record->name = NULL;
+		novo_record->bytesFileSize = NULL;
+		novo_record->firstCluster = NULL ;
+		for(i=0;i<RECS_IN_DIR;i++){
+			memcpy(i*REC_TAM,novo_record);
+		}
+
+		return 0;
+	}
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Criar um novo diret�rio.
@@ -561,8 +581,6 @@ int mkdir2 (char *pathname){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int rmdir2 (char *pathname){ INIT;
 	return -1;
@@ -583,8 +601,6 @@ int rmdir2 (char *pathname){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 int chdir2 (char *pathname){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -602,8 +618,6 @@ int chdir2 (char *pathname){ INIT;
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int getcwd2 (char *pathname, int size){ INIT;
 	return -1;
@@ -623,8 +637,6 @@ int getcwd2 (char *pathname, int size){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
-
-
 DIR2 opendir2 (char *pathname){ INIT;
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -641,9 +653,6 @@ DIR2 opendir2 (char *pathname){ INIT;
 		Em caso de erro, ser� retornado um valor negativo.
 	-----------------------------------------------------------------------------*/
 }
-
-
-
 
 int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 	return -1;
@@ -668,8 +677,6 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 		#define	END_OF_DIR	1
 	-----------------------------------------------------------------------------*/
 }
-
-
 
 int closedir2 (DIR2 handle){ INIT;
 	return -1;
