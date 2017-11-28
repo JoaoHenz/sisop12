@@ -78,30 +78,17 @@ void initialize(){
 	BYTE *buffer = (char*) malloc(SECTOR_SIZE);
 
 	if (!initialized){
-		read_sector(0, buffer);
-		for (i = 0; i < 4; i++){
-			superbloco->id[i] = buffer[3-i];
-		}
-		(*curr_pos) = i + 1;
-		superbloco->version = wordConvert(curr_pos, buffer);
-		superbloco->SuperBlockSize = wordConvert(curr_pos, buffer);
-		superbloco->DiskSize = dWordConvert(curr_pos, buffer);
-		superbloco->NofSectors  = dWordConvert(curr_pos, buffer);
-		superbloco->SectorsPerCluster = dWordConvert(curr_pos, buffer);
-		superbloco->pFATSectorStart = dWordConvert(curr_pos, buffer);
-		superbloco->RootDirCluster = dWordConvert(curr_pos, buffer);
-		superbloco->DataSectorStart = dWordConvert(curr_pos, buffer);
-		sector_aux = superbloco->RootDirCluster / 4;
-		read_sector(sector_aux, buffer);
-		cluster_pos = 64 * (superbloco->RootDirCluster % 4);
-		rootDir->TypeVal = buffer[cluster_pos];
-		for(i = cluster_pos; i < (MAX_FILE_NAME_SIZE + cluster_pos); i++){
-			rootDir->name[i] = buffer[MAX_FILE_NAME_SIZE + cluster_pos - i];
-		}
-		(*curr_pos) = MAX_FILE_NAME_SIZE + cluster_pos;
-		rootDir->bytesFileSize = dWordConvert(curr_pos, buffer);
-		rootDir->firstCluster = dWordConvert(curr_pos, buffer);
-		initialized = 1;
+		superbloco = (struct t2fs_superbloco *) malloc(256);
+		read_sector(0,(char *) superbloco);
+
+		rootDir = (struct t2fs_record*) malloc(sizeof(struct t2fs_record));
+		rootDir->TypeVal = 0x02;
+		strcpy(rootDir->name, "root");
+		//rootDir->name = rootName;
+		rootDir->bytesFileSize = (superbloco->SectorsPerCluster) * (SECTOR_SIZE);
+		rootDir->firstCluster = superbloco->RootDirCluster;
+
+		currentDir = rootDir;
 	}
 }
 
@@ -319,7 +306,7 @@ int delete2 (char *filename){ INIT;
 
 
 FILE2 open2 (char *filename){ INIT;
-	struct t2fs_record* new_record;
+	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 
 	// acessando arquivo no diretório pai
 	if (filename[0] == '.' && filename[1] == '.'){
@@ -580,18 +567,8 @@ int closedir2 (DIR2 handle){ INIT;
 
 int main(int argc, char const *argv[]) {
 	/* temp main for testin */
-	//INIT;
-	superbloco = (struct t2fs_superbloco *) malloc(256);
-	read_sector(0,(char *) superbloco);
+	INIT;
 
-	rootDir = (struct t2fs_record*) malloc(sizeof(struct t2fs_record));
-	rootDir->TypeVal = 0x02;
-	strcpy(rootDir->name, "root");
-	//rootDir->name = rootName;
-	rootDir->bytesFileSize = (superbloco->SectorsPerCluster) * (SECTOR_SIZE);
-	rootDir->firstCluster = superbloco->RootDirCluster;
-
-	currentDir = rootDir;
 
 
 
@@ -624,7 +601,7 @@ int main(int argc, char const *argv[]) {
 
 	printf("%u\n",procuraClusterVazio());
 
-	
+	open2("file1.txt");
 	/*
 	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
 	getFileRecord(rootDir,"file1.txt",new_file);
