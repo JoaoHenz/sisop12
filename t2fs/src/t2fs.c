@@ -465,6 +465,45 @@ int close2 (FILE2 handle){ INIT;
 }
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
+	Handler *handler = lista_arq_abertos[handle];
+	struct t2fs_record *this_record = handler->fileRecord;
+
+	DWORD clusters_toread = (size+(handler->posFile%CLUSTER_SIZE) + (CLUSTER_SIZE-1))/CLUSTER_SIZE; //ROUND UP
+	DWORD current_cluster = handler->posFile/CLUSTER_SIZE;
+	DWORD cluster_index = -1;
+	DWORD firstCluster = this_record->firstCluster;
+	int i=0;
+	int bytes_read = 0;
+	char *cluster = malloc(CLUSTER_SIZE);
+
+	for(i=0; i<current_cluster; i++){
+		cluster_index = get_next_cluster(firstCluster);
+		firstCluster = cluster_index;
+	}
+	i=0;
+
+	int offset = handler->posFile%CLUSTER_SIZE;
+
+	if(clusters_toread == 1){
+		read_cluster(cluster_index, cluster);
+		memcpy(buffer, cluster + offset, size);
+		free(cluster);
+	}else if (clusters_toread == 2){
+		read_cluster(cluster_index, cluster);
+		memcpy(buffer, cluster + (offset), CLUSTER_SIZE - offset );
+		read_cluster(get_next_cluster(cluster_index), cluster);
+		memcpy(buffer + CLUSTER_SIZE - offset, cluster, size - (CLUSTER_SIZE - offset) );
+		free(buffer);
+	}
+	else{
+		read_cluster(cluster_index, cluster);
+		memcpy(buffer, cluster + (offset), CLUSTER_SIZE - offset );
+
+		//for(i=1;) finish this for here
+
+	}
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura de "size" bytes do arquivo identificado por "handle".
