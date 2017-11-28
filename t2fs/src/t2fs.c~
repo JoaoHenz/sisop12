@@ -172,11 +172,10 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 	read_cluster(directory->firstCluster,buffer);
 	for(i = 0; i < max_records; i++){
 		memcpy(file, buffer + (i*REC_TAM), sizeof(struct t2fs_record));
-		if(strcmp(file->name, filename)){
+		if(strcmp(file->name, filename) == 0){
 			return 0;
 		}
 	}
-	free(record);
 	return -1;
 }
 

@@ -172,7 +172,7 @@ int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_rec
 	read_cluster(directory->firstCluster,buffer);
 	for(i = 0; i < max_records; i++){
 		memcpy(file, buffer + (i*REC_TAM), sizeof(struct t2fs_record));
-		if(strcmp(file->name, filename)){
+		if(strcmp(file->name, filename) == 0){
 			return 0;
 		}
 	}
@@ -630,6 +630,7 @@ int main(int argc, char const *argv[]) {
 	getFileRecord(rootDir,"file1.txt",new_file);
 	printf("File Type: %x\n", new_file->TypeVal);
 	printf("File Name: ");
+	i = 0;
 	while(new_file->name[i] != '\0'){
 		printf("%c",(unsigned char) new_file->name[i]);
 		i++;
