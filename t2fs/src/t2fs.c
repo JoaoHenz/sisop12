@@ -8,6 +8,26 @@
 #define REC_TAM 64
 #define RECS_IN_DIR 1024/64
 
+/*
+	identify2 	= FEITO
+	create2 	= PARCIAL
+	open2 		= PARCIAL
+	delete2		=
+	close2		=
+	read2		=
+	write2		=
+	truncate2	=
+	seek2		=
+	mkdir2		=
+	rmdir2		=
+	chdir2		=
+	getcwd2		=
+	opendir2	=
+
+	STATUS: 14% Concluido
+
+*/
+
 typedef struct fileHandler{
 	int fileHandle;	//handle do arquivo
 	int posFile;		//current position pointer do arquivo
