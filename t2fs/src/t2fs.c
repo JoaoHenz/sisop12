@@ -168,7 +168,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record){
 		i++;
 	}
 
-	
+
 	if (lista_arq_abertos[i] == NULL){
 		Handler *handler = malloc(sizeof(Handler));
 
@@ -444,10 +444,10 @@ FILE2 open2 (char *filename){ INIT;
 	char *nullstring = "\0";
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
-	
+
 	parsePath(filename, subdir, remainder);
 	//printf("%s\n%s\n\n", subdir,remainder);
-	if(filename[0] == '.'){ // 
+	if(filename[0] == '.'){ //
 		if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
 	}
 	else{
@@ -456,7 +456,7 @@ FILE2 open2 (char *filename){ INIT;
 	while(strcmp(remainder, nullstring) != 0){
 		strcpy(subdir, nullstring);
 		strcpy(aux_path, remainder);
-		strcpy(remainder, nullstring);	
+		strcpy(remainder, nullstring);
 		parsePath(aux_path, subdir, remainder);
 		//printf("%s\n%s\n\n", subdir, remainder);
 		if (getFileRecord(record_aux, subdir, record_aux) == -1) return -1;
@@ -678,6 +678,31 @@ int mkdir2 (char *pathname){ INIT;
 }
 
 int rmdir2 (char *pathname){ INIT;
+	//TODO malandragem para ler o dir com o pathname e colocá-lo em dir
+
+	struct t2fs_record *dir = malloc(REC_TAM);
+	struct t2fs_record *entry = malloc(REC_TAM);
+	int i;
+	int foundFile = 0;
+	char *buffer = malloc(CLUSTER_SIZE);
+	read_cluster(dir->firstCluster, buffer);
+	//check if there are files
+
+	for(i=2; i<RECS_IN_DIR; i++){  //entries 0 and 1 are . and .. and are always there
+		memcpy(entry, buffer + (i*REC_TAM), REC_TAM);
+		//printf("%s\n",record->name );
+		if(entry->TypeVal != 0x00){
+			free(entry);
+			foundFile = 1;
+			break;
+		}
+	}
+
+	if(foundFile == 1){
+		return -1;  //dir is not empty
+	}
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um subdiret�rio do disco.
