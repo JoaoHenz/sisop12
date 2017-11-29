@@ -231,7 +231,7 @@ DWORD procuraClusterVazio(){
 		for(j=0; j<64; j++){
 			cluster = dWordConvert(&index, buffer);
 			cluster_index++;
-			printf("%u\n", cluster);
+			//printf("%u\n", cluster);
 			if (cluster == 0x00000000){
 				flagAchou=1;
 				break;
@@ -1206,8 +1206,13 @@ int main(int argc, char const *argv[]) {
 	printf("%d\n",(handler->posFile) );
 	*/
 
-	mark_free(0);
-	printf("%x\n", get_next_cluster(0) );
+	/*mark_free(0);
+	printf("%x\n", get_next_cluster(0) );*/
+
+	mkdir2("./dir");
+	print_dir(currentDir);
+	chdir2("./dir1");
+	print_dir(currentDir);
 
 	return 0;
 }
