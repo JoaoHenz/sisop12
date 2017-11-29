@@ -44,9 +44,9 @@ struct t2fs_record *currentDir;
 
 Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
-/*
+
 Handler* lista_dir_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
-												NULL,NULL,NULL,NULL,NULL };*/
+												NULL,NULL,NULL,NULL,NULL };
 
 
 #define INIT {initialize();}
@@ -161,6 +161,38 @@ void initialize(){
 		initialized = 1;
 	}
 }
+int insereListaDirAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
+	int i=0, j;
+
+	for(j = 0; j < MAX_LAA; j++){
+		if (lista_dir_abertos[j] != NULL && novo_record->firstCluster == lista_dir_abertos[j]->fileRecord->firstCluster){
+			return -1;
+		}
+	}
+
+	while((i<MAX_LAA) && (lista_dir_abertos[i] != NULL)){
+		i++;
+	}
+
+
+	if (lista_dir_abertos[i] == NULL){
+		Handler *handler = malloc(sizeof(Handler));
+
+		handler->fileHandle = i;
+		handler->posFile = 0;
+		handler->fileRecord = novo_record;
+		handler->dir = dir;
+
+		lista_dir_abertos[i] = handler;
+
+		handlerCount++;
+		return i; //execução terminou com sucesso, devolve o handler
+	}
+
+	return -1; //execução acabou com erros
+
+}
+
 
 int insereListaArqAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
 	int i=0, j;
@@ -1076,7 +1108,7 @@ int main(int argc, char const *argv[]) {
 	//chdir2("../dir1");
 	print_dir(currentDir);
 	printf("\n");
-	
+
 	/*
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
