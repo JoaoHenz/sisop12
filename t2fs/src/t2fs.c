@@ -862,11 +862,17 @@ int main(int argc, char const *argv[]) {
 	printf("File Code: %d\n",i);
 	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
+
+	i = open2("/file2.txt");
+	printf("File Code: %d\n",i);
+	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
+	close2(i);
+
 	i = open2("/file2.txt");
 	printf("File Code: %d\n",i);
 	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
-	i = open2("/file1.txt");
+ 	i = open2("/file1.txt");
 	printf("File Code: %d\n",i);
 	/*
 	struct t2fs_record* testrec1 = malloc(sizeof(struct t2fs_record));
