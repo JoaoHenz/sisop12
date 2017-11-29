@@ -992,10 +992,9 @@ DIR2 opendir2 (char *pathname){ INIT;
 int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 	char cluster_buffer[CLUSTER_SIZE];
 	int flag;
-	struct t2fs_record *novacoisa;
+	struct t2fs_record *novacoisa = malloc(sizeof(struct t2fs_record));
 	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
 		flag = read_cluster(lista_arq_abertos[handle]->fileRecord->firstCluster,cluster_buffer);
-
 		if ((!flag)&&(lista_arq_abertos[handle]->posFile<RECS_IN_DIR)){
 			novacoisa = malloc(REC_TAM);
 			memcpy(novacoisa,cluster_buffer+REC_TAM*lista_arq_abertos[handle]->posFile, REC_TAM);
@@ -1033,9 +1032,7 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 }
 
 int closedir2 (DIR2 handle){ INIT;
-	printf("henlo");
-	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
-		printf("dir I am gonna fuck: %s\n",lista_arq_abertos[handle]->fileRecord->name);
+	if (lista_dir_abertos[handle]->fileRecord->TypeVal == 0x02){
 		free(lista_dir_abertos[handle]->fileRecord);
 		lista_dir_abertos[handle] = NULL;
 		handlerNarutoCount--;
@@ -1120,14 +1117,30 @@ int main(int argc, char const *argv[]) {
 	getcwd2(s, 256);
 	printf("aaa:%s\n", s);
 	printf("\n");*/
+
+	/*
 	i = opendir2("/dir1");
+	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);	
 	printf("Dir name of new Dir is: %s\n",lista_dir_abertos[i]->fileRecord->name);
+	printf("Dir size of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->bytesFileSize);
+	printf("Dir first cluster of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->firstCluster);
 	printf("Dir Code: %d\n\n",i);
 	closedir2(0);
-	//printf("Dir name of new Dir is: %s\n\n",lista_dir_abertos[i]->fileRecord->name);
-	//printf("Dir Code: %d\n\n",i);
-	
+	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);	
+	printf("Dir name of new Dir is: %s\n",lista_dir_abertos[i]->fileRecord->name);
+	printf("Dir size of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->bytesFileSize);
+	printf("Dir first cluster of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->firstCluster);
+	printf("Dir Code: %d\n\n",i);
+	*/
 
+	
+	i = opendir2("./");
+	DIRENT2 *dentry;
+	lista_dir_abertos[i]->posFile = 0;
+	readdir2(i, dentry);
+
+	printf("Name of nigga: %s\n", dentry->name);
+	
 	/*
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
