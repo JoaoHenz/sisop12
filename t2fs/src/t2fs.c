@@ -578,6 +578,14 @@ int close2 (FILE2 handle){ INIT;
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
 
+	if (handle >= MAX_LAA || handle < 0){ // handler out of bounds error
+		return -1;
+	}
+
+	// percorre FAT achando ponteiros do arquivo
+	// initial sector =
+	//	pFATSectorStart + 
+
 	/*
 	Handler *handler = lista_arq_abertos[handle];
 	struct t2fs_record *this_record = handler->fileRecord;
