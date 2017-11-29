@@ -590,31 +590,67 @@ int close2 (FILE2 handle){ INIT;
 }
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
-	int FATClusterIndex, FATSectorIndex, fileRead;
+	DWORD currentCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
+	DWORD next_cluster;
+	int FATClusterIndex, i = 0;
+	int currentPointer = lista_arq_abertos[handle]->posFile;
+	FATClusterIndex = currentPointer / (256 * superbloco->SectorsPerCluster);
+	char *bufferAux = malloc(CLUSTER_SIZE);
+	int clusterPointer = currentPointer % CLUSTER_SIZE;
+	int currentSize = 0;
+
+	while(i < FATClusterIndex){
+		next_cluster = get_next_cluster(currentCluster);
+		currentCluster = next_cluster;
+
+		i++;
+	}
+	read_cluster(currentCluster, bufferAux);
+	memcpy(buffer, bufferAux + clusterPointer, CLUSTER_SIZE - clusterPointer);
+	next_cluster = get_next_cluster(currentCluster);
+	currentCluster = next_cluster;
+	currentSize += CLUSTER_SIZE - clusterPointer;
+	while(next_cluster != 0xFFFFFFFF || currentSize + CLUSTER_SIZE < size){
+		read_cluster(currentCluster, bufferAux);
+		memcpy(buffer, bufferAux, CLUSTER_SIZE);
+		next_cluster = get_next_cluster(currentCluster);
+		currentCluster = next_cluster;
+		currentSize += CLUSTER_SIZE;
+	}
+	if (currentSize + CLUSTER_SIZE < size){
+		read_cluster(currentCluster, bufferAux);
+		memcpy(buffer, bufferAux, size - currentSize);
+	}
+	else if (next_cluster != 0xFFFFFFFF){
+		read_cluster(currentCluster, bufferAux);
+		memcpy(buffer, bufferAux, CLUSTER_SIZE);
+	}
+
+	return 0;
+	/*
+	do {
+		next_cluster = get_next_cluster(firstCluster);
+		firstCluster = next_cluster;
+		i++;
+	} while(next_cluster != 0xFFFFFFFF);*/
+
+	/*int FATClusterIndex, FATSectorIndex, fileRead;
 	int currentPointer = lista_arq_abertos[handle]->posFile;
 	int firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
 	char *bufferAux = malloc(256);
+	char 
 
 	if (handle >= MAX_LAA || handle < 0){ // handler out of bounds error
 		return -1;
 	}
-
 
 	FATClusterIndex = firstCluster + currentPointer / (256 * superbloco->SectorsPerCluster);
 	FATSectorIndex = superbloco->pFATSectorStart + (FATClusterIndex / 64);
 	
 	while(!fileRead){
 		read_sector(FATSectorIndex,bufferAux);
-
-	}
-
-	// percorre FAT achando ponteiros do arquivo
-	// initial clusterIndex =
-	//	(CP / 256) / SectorsPerCluster
-	// initial sector index = 
-	//	pFATSectorStart + cluster_index / 64
-	//FATClusterIndex = lista_arq_abertos[handle]->posFile / (256 * superbloco->SectorsPerCluster);
-	//FATSectorIndex = pFATSectorStar + ((firstCluster + clusterIndex) / 64);
+		
+	}*/
 		
 
 	/*
