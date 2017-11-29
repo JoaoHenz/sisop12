@@ -583,9 +583,32 @@ int truncate2 (FILE2 handle){ INIT;
 	struct t2fs_record *record = lista_arq_abertos[handle]->fileRecord;
 	Handler *handler = lista_arq_abertos[handle];
 
+	DWORD curr_cluster = handler->posFile/CLUSTER_SIZE;
+	DWORD firstCluster = record->firstCluster;
+	DWORD next_cluster = -1;
+	record->bytesFileSize = handler->posFile;
+
+	struct t2fs_record *currentDirAntigo = malloc(REC_TAM);
+	memcpy (currentDirAntigo, currentDir, REC_TAM);
+	currentDir = handler->dir;
+	write_rec_to_disk(record);
+	memcpy(currentDir, currentDirAntigo, REC_TAM);
+	free(currentDirAntigo);
+
+	int i = 0;
+
+	do {
+		next_cluster = get_next_cluster(firstCluster);
+		if(i>curr_cluster){
+			mark_free(firstCluster);
+		}
+		firstCluster = next_cluster;
+		i++;
+	} while(next_cluster != 0xFFFFFFFF);
 
 
-	return -1;
+
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fun��o usada para truncar um arquivo.
 		Remove do arquivo todos os bytes a partir da posi��o atual do contador de posi��o (CP)
