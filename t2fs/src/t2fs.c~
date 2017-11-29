@@ -37,7 +37,7 @@ typedef struct fileHandler{
 } Handler;
 
 struct t2fs_superbloco *superbloco;
-int initialized = 0, handlerCount = 0;
+int initialized = 0, handlerCount = 0, handlerNarutoCount = 0;
 char *current_path;
 struct t2fs_record *rootDir;
 struct t2fs_record *currentDir;
@@ -164,16 +164,9 @@ void initialize(){
 int insereListaDirAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
 	int i=0, j;
 
-	for(j = 0; j < MAX_LAA; j++){
-		if (lista_dir_abertos[j] != NULL && novo_record->firstCluster == lista_dir_abertos[j]->fileRecord->firstCluster){
-			return -1;
-		}
-	}
-
 	while((i<MAX_LAA) && (lista_dir_abertos[i] != NULL)){
 		i++;
 	}
-
 
 	if (lista_dir_abertos[i] == NULL){
 		Handler *handler = malloc(sizeof(Handler));
@@ -185,7 +178,7 @@ int insereListaDirAbertos(struct t2fs_record* novo_record, struct t2fs_record *d
 
 		lista_dir_abertos[i] = handler;
 
-		handlerCount++;
+		handlerNarutoCount++;
 		return i; //execução terminou com sucesso, devolve o handler
 	}
 
@@ -965,7 +958,6 @@ DIR2 opendir2 (char *pathname){ INIT;
 
 	memcpy(currentDirAntigo,currentDir, REC_TAM);
 	flag =chdir2(pathname);
-	printf("%s\n",currentDir->name);
 
 	if(flag==0){
 		struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
@@ -977,7 +969,7 @@ DIR2 opendir2 (char *pathname){ INIT;
 		memcpy(daddy_record, buffer + (1*REC_TAM), REC_TAM); //passa o pai para o currentDir
 		free(buffer);
 
-		handle = insereListaArqAbertos(new_record,daddy_record);
+		handle = insereListaDirAbertos(new_record,daddy_record);
 	}
 
 	memcpy(currentDir,currentDirAntigo, REC_TAM);
@@ -1041,11 +1033,12 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 }
 
 int closedir2 (DIR2 handle){ INIT;
-
+	printf("henlo");
 	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
-		free(lista_arq_abertos[handle]->fileRecord);
-		lista_arq_abertos[handle] = NULL;
-		handlerCount--;
+		printf("dir I am gonna fuck: %s\n",lista_arq_abertos[handle]->fileRecord->name);
+		free(lista_dir_abertos[handle]->fileRecord);
+		lista_dir_abertos[handle] = NULL;
+		handlerNarutoCount--;
 		return 0;
 	}
 
@@ -1103,7 +1096,7 @@ int main(int argc, char const *argv[]) {
 	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
  	i = open2("/file1.txt");
-	printf("File Code: %d\n",i);
+	printf("File Code: %d\n\n",i);
 	/*
 	struct t2fs_record* testrec1 = malloc(sizeof(struct t2fs_record));
 	struct t2fs_record* testrec2 = malloc(sizeof(struct t2fs_record));
@@ -1127,7 +1120,13 @@ int main(int argc, char const *argv[]) {
 	getcwd2(s, 256);
 	printf("aaa:%s\n", s);
 	printf("\n");*/
-
+	i = opendir2("/dir1");
+	printf("Dir name of new Dir is: %s\n",lista_dir_abertos[i]->fileRecord->name);
+	printf("Dir Code: %d\n\n",i);
+	closedir2(0);
+	//printf("Dir name of new Dir is: %s\n\n",lista_dir_abertos[i]->fileRecord->name);
+	//printf("Dir Code: %d\n\n",i);
+	
 
 	/*
 	DIR2 dir = opendir2("dir1");
