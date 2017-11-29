@@ -1127,9 +1127,7 @@ int main(int argc, char const *argv[]) {
 	getcwd2(s, 256);
 	printf("aaa:%s\n", s);
 	printf("\n");*/
-=======
-	printf("\n");
->>>>>>> c52afa399da707c886f839affad9ce46fa811813
+
 
 	/*
 	DIR2 dir = opendir2("dir1");

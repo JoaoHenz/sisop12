@@ -164,12 +164,6 @@ void initialize(){
 int insereListaDirAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
 	int i=0, j;
 
-	for(j = 0; j < MAX_LAA; j++){
-		if (lista_dir_abertos[j] != NULL && novo_record->firstCluster == lista_dir_abertos[j]->fileRecord->firstCluster){
-			return -1;
-		}
-	}
-
 	while((i<MAX_LAA) && (lista_dir_abertos[i] != NULL)){
 		i++;
 	}
