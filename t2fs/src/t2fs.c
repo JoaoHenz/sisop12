@@ -647,12 +647,12 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 }
 
 int write2 (FILE2 handle, char *buffer, int size){ INIT;
-	int i =0; j=0; l=0;
+	int i =0, j=0, l=0;
 	int size_sectors = size/SECTOR_SIZE;
-	int clusters_ajeitados = posFile/(SECTOR_SIZE*SectorsPerCluster)-1;
+	int clusters_ajeitados =lista_arq_abertos[handle]->posFile/(SECTOR_SIZE*superbloco->SectorsPerCluster)-1;
 	DWORD firstCluster, next_cluster;
 
-	firstCluster = handle->fileRecord->firstCluster;
+	firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
 	do {
 		next_cluster = get_next_cluster(firstCluster);
 		if(next_cluster != 0xFFFFFFFF){
@@ -667,10 +667,10 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 	DWORD clusterVazio;
 
 	while(i<size_sectors){ //enquanto nao terminar de gravar
-		while(posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
-			write_sector(clusternoqualestouescrevendo*SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
+		while(lista_arq_abertos[handle]->posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
+			write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
 
-			posFile += SECTOR_SIZE;
+			lista_arq_abertos[handle]->posFile += SECTOR_SIZE;
 			i++; // diz o quanto falta para terminar de gravar o buffer
 			j++;//diz em qual sector deste cluster nós estamos
 		}
@@ -680,10 +680,10 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 		clusterVazio = procuraClusterVazio();
 		if (clusterVazio == -1)
 			return -1;
-		mark_next(clusternoqualestouescrevendo,clustervazio);
+		mark_next(clusternoqualestouescrevendo,clusterVazio);
 		mark_EOF(clusterVazio);
 
-		clusternoqualestouescrevendo = clustervazio;
+		clusternoqualestouescrevendo = clusterVazio;
 		//faz o processamento para alocar um novo cluster
 	}
 	return 0;
