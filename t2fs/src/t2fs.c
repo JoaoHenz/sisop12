@@ -788,7 +788,14 @@ int chdir2 (char *pathname){ INIT;
 }
 
 int getcwd2 (char *pathname, int size){ INIT;
-	return -1;
+	//TODO ESTAMOS MANTENDO O current_path ATUALIZADO FOR REAL BOYZ?
+
+	if(size < strlen(current_path)){
+		return -1;  //size é muito pequeno
+	}
+
+	strcpy(pathname, current_path);
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fun��o que informa o diret�rio atual de trabalho.
 		O T2FS deve copiar o pathname do diret�rio de trabalho, incluindo o �\0� do final do string, para o buffer indicado por "pathname".
@@ -927,6 +934,9 @@ int main(int argc, char const *argv[]) {
 	printf("Teste 1 Name: %s\n", testrec1->name);
 	printf("Teste 1 Name: %s\n", testrec2->name);
 	*/
+
+	getcwd2(s, 256);
+	printf("%s\n", s);
 
 	return 0;
 }
