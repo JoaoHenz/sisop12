@@ -52,6 +52,35 @@ Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 *******************FUNÇÃOS AUXILIARES******************************************
 ********************************************************nigger*****************
 */
+int parsePath(char* path, char* subdir, char* remainder){
+	int i, j;
+	char* nullstring = "";
+	strcpy(subdir,nullstring);
+	strcpy(remainder,nullstring);
+
+	if(path[0] == '/'){
+		i = 1;
+	}
+	else{
+		i = 0;
+	}
+	j = 0;
+	while(path[i] != '/' && path[i] != '\0'){
+		subdir[j] = path[i];
+		subdir[j+1] = '\0';
+		i++;
+		j++;
+	}
+	j = 0;
+	while(path[i] != '\0'){
+		remainder[j] = *(path + i);
+		j++;
+		i++;
+	}
+	remainder[j] = '\0';
+	return 0;
+}
+
 int findDir(char* filename){
 	return -1;
 }
@@ -132,7 +161,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record){
 	while((i<MAX_LAA) && (lista_arq_abertos[i] != NULL)){
 		i++;
 	}
-
+	
 	if (lista_arq_abertos[i] == NULL){
 		Handler *handler = malloc(sizeof(Handler));
 
@@ -148,7 +177,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record){
 		//(*lista_arq_abertos[i])->bytesFileSize = novo_record->bytesFileSize;
 		//(*lista_arq_abertos[i])->firstCluster = novo_record->firstCluster;
 
-
+		handlerCount++;
 		return i; //execução terminou com sucesso, devolve o handler
 	}
 
@@ -320,10 +349,6 @@ int identify2 (char *name, int size){ INIT;
 }
 
 FILE2 create2 (char *filename){ INIT;
-	if (handlerCount>=MAX_LAA){
-		return -1;  //não há mais espaço para abrir arquivos
-	}
-	handlerCount++;
 
 	struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
 
@@ -406,33 +431,35 @@ int delete2 (char *filename){ INIT;
 }
 
 FILE2 open2 (char *filename){ INIT;
-
-	if (handlerCount>=MAX_LAA){
-		return -1;  //não há mais espaço para abrir arquivos
-	}
-	handlerCount++;
-
+	char *aux_path = malloc(64);
+	char *subdir = malloc(64);
+	char *remainder = malloc(64);
+	char *nullstring = "\0";
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
-
-	// acessando arquivo no diretório pai
-	if (filename[0] == '.' && filename[1] == '.'){
-		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
-		getFileRecord(currentDir, "..", new_record);
-		getFileRecord(daddy, filename, new_record);
+	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
+	
+	parsePath(filename, subdir, remainder);
+	//printf("%s\n%s\n\n", subdir,remainder);
+	if(filename[0] == '.'){ // 
+		if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
 	}
-	// usando caminho absoluto para outro diretório
-	else if (filename [0] == '/'){
-		return -1;
-	}
-	// acessando arquivo no diretório atual
 	else{
-		getFileRecord(currentDir, filename, new_record);
+		if (getFileRecord(rootDir, subdir, record_aux) == -1) return -1;
 	}
+	while(strcmp(remainder, nullstring) != 0){
+		strcpy(subdir, nullstring);
+		strcpy(aux_path, remainder);
+		strcpy(remainder, nullstring);	
+		parsePath(aux_path, subdir, remainder);
+		//printf("%s\n%s\n\n", subdir, remainder);
+		if (getFileRecord(record_aux, subdir, record_aux) == -1) return -1;
+	}
+	memcpy(new_record, record_aux, sizeof(struct t2fs_record));
+	//int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
 
 	int handle = insereListaArqAbertos(new_record);
-
+	free(record_aux);
 	return handle;
-
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um arquivo existente no disco.
 		O nome desse novo arquivo � aquele informado pelo par�metro "filename".
@@ -451,7 +478,7 @@ FILE2 open2 (char *filename){ INIT;
 
 int close2 (FILE2 handle){ INIT;
 	free(lista_arq_abertos[handle]->fileRecord);
-	free(lista_arq_abertos[handle]);
+	lista_arq_abertos[handle] = NULL;
 	handlerCount--;
 	return 0;
 	/*-----------------------------------------------------------------------------
@@ -553,7 +580,17 @@ int truncate2 (FILE2 handle){ INIT;
 
 int seek2 (FILE2 handle, unsigned int offset){ INIT;
 
+	if((handle<MAX_LAA)&&(handle>=0)){
+		if(offset!=-1){
+			lista_arq_abertos[handle]->posFile = offset;
+			return 0;
+		}
+		else{
+			lista_arq_abertos[handle]->posFile = lista_arq_abertos[handle]->fileRecord->bytesFileSize+1;
+			return 0;
+		}
 
+	}
 
 	return -1;
 	/*-----------------------------------------------------------------------------
@@ -677,6 +714,8 @@ int chdir2 (char *pathname){ INIT;
 		}
 	}
 
+	if(path_is_valid==0)
+		return 0;
 
 
 	return -1;
@@ -715,37 +754,20 @@ int getcwd2 (char *pathname, int size){ INIT;
 }
 
 DIR2 opendir2 (char *pathname){ INIT;
-/*
+	struct t2fs_record* currentDirAntigo = malloc(sizeof(struct t2fs_record));
+	int flag;
 
-	if (handlerCount>=MAX_LAA){
-		return -1;  //não há mais espaço para abrir arquivos
+	memcpy(currentDirAntigo,currentDir, REC_TAM);
+	flag =chdir2(pathname);
+
+	if((flag==0)&&(handlerCount<MAX_LAA)){
+		handlerCount++;
+		struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+		int handle = insereListaArqAbertos(currentDir);
+
+		memcpy(currentDir,currentDirAntigo, REC_TAM);
+		return handle;
 	}
-	handlerCount++;
-
-	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
-
-	// acessando arquivo no diretório pai
-	if ((filename[0] == '.') && (filename[1] == '.')){
-		struct t2fs_record* daddy = malloc(sizeof(struct t2fs_record));
-		getFileRecord(currentDir, "..", new_record);
-		getFileRecord(daddy, filename, new_record);
-	}
-	// usando caminho absoluto para outro diretório
-	else if (filename [0] == '/'){
-		return -1;
-	}
-	// acessando arquivo no diretório atual
-	else{
-		getFileRecord(currentDir, filename, new_record);
-	}
-
-	int handle = insereListaArqAbertos(new_record);
-
-	return handle;*/
-
-
-
-
 
 
 	return -1;
@@ -824,40 +846,27 @@ int main(int argc, char const *argv[]) {
 	printf("FAT Start Sector: %u\n",(unsigned short int) superbloco->pFATSectorStart);
 	printf("Root Directory Start Cluster: %u\n",(unsigned short int) superbloco->RootDirCluster);
 	printf("Data Start Sector: %u\n",(unsigned short int) superbloco->DataSectorStart);
-	//getchar();
-	//identify2(name, 128);
-	/* TESTE DE IMPRESSÃO DO NOME
-	i = 0;
-	while(name[i] != '\0'){
-		printf("%c", name[i]);
-		i++;
-	}
-	*/
 
-	i = open2("file1.txt");
-	printf("File is called: ");
-	while(lista_arq_abertos[i]->fileRecord->name[j] != '\0'){
-		printf("%c",(unsigned char) lista_arq_abertos[i]->fileRecord->name[j]);
-		j++;
-	}
-	printf("\n");
+	printf("\nOpen2 Tests:\n");
+	i = open2("/dir1/dir2/dir3/dir4/dir5/file.txt");
+	printf("File Code: %d\n\n",i);
+
+	i = open2("/file1.txt");
+	printf("File Code: %d\n",i);
+	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
+
+	i = open2("/file2.txt");
+	printf("File Code: %d\n",i);
+	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
 	/*
-	struct t2fs_record* new_file = malloc(sizeof(struct t2fs_record));
-	getFileRecord(rootDir,"file1.txt",new_file);
-	printf("File Type: %x\n", new_file->TypeVal);
-	printf("File Name: ");
-	i = 0;
-	while(new_file->name[i] != '\0'){
-		printf("%c",(unsigned char) new_file->name[i]);
-		i++;
-	}
-	printf("\n");
-	printf("File Size: %u\n", new_file->bytesFileSize);
-	printf("First Cluster: %u\n", new_file->firstCluster);*/
-
-
-	//write_rec_to_disk(rootDir);
+	struct t2fs_record* testrec1 = malloc(sizeof(struct t2fs_record));
+	struct t2fs_record* testrec2 = malloc(sizeof(struct t2fs_record));
+	getFileRecord(rootDir, "file1.txt", testrec1);
+	getFileRecord(rootDir, "file2.txt", testrec2);
+	printf("Teste 1 Name: %s\n", testrec1->name);
+	printf("Teste 1 Name: %s\n", testrec2->name);
+	*/
 
 	return 0;
 }
