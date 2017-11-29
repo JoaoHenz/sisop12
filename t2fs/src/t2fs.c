@@ -155,6 +155,7 @@ void initialize(){
 		currentDir = rootDir;
 		current_path = malloc(5);
 		strcpy(current_path, "/");
+		initialized = 1;
 	}
 }
 
@@ -1033,15 +1034,19 @@ int main(int argc, char const *argv[]) {
 	char *s = malloc(256);
 	chdir2("./dir1");
 	print_dir(currentDir);
-	chdir2("./root");
+
+	//chdir2("./root");
 	getcwd2(s, 256);
 	//printf("%s\n", s);
 	//chdir2("../dir1");
 	print_dir(currentDir);
-
+	printf("\n");
+	
+	/*
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
 	printf("%d\n",(handler->posFile) );
+	*/
 
 	return 0;
 }
