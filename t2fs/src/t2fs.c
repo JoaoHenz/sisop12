@@ -577,14 +577,32 @@ int close2 (FILE2 handle){ INIT;
 }
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
+	int FATClusterIndex, FATSectorIndex, fileRead;
+	int currentPointer = lista_arq_abertos[handle]->posFile;
+	int firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
+	char *bufferAux = malloc(256);
 
 	if (handle >= MAX_LAA || handle < 0){ // handler out of bounds error
 		return -1;
 	}
 
+
+	FATClusterIndex = firstCluster + currentPointer / (256 * superbloco->SectorsPerCluster);
+	FATSectorIndex = superbloco->pFATSectorStart + (FATClusterIndex / 64);
+	
+	while(!fileRead){
+		read_sector(FATSectorIndex,bufferAux);
+
+	}
+
 	// percorre FAT achando ponteiros do arquivo
-	// initial sector =
-	//	pFATSectorStart + 
+	// initial clusterIndex =
+	//	(CP / 256) / SectorsPerCluster
+	// initial sector index = 
+	//	pFATSectorStart + cluster_index / 64
+	//FATClusterIndex = lista_arq_abertos[handle]->posFile / (256 * superbloco->SectorsPerCluster);
+	//FATSectorIndex = pFATSectorStar + ((firstCluster + clusterIndex) / 64);
+		
 
 	/*
 	Handler *handler = lista_arq_abertos[handle];
