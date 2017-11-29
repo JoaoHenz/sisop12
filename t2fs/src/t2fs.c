@@ -331,9 +331,9 @@ int mark_EOF(DWORD cluster_index){
 	char *buffer = malloc(SECTOR_SIZE);
 	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
 	read_sector(sector_index,buffer);
-	DWORD eof = 0xFFFFFFFF;
+	unsigned int eof = 0xFFFFFFFF;
 	int offset = (cluster_index - ((sector_index-1)*64))*4;
-	memcpy(buffer+offset,(DWORD *) eof, sizeof(DWORD));
+	memcpy(buffer+offset, &eof, sizeof(DWORD));
 	write_sector(sector_index, buffer);
 	free(buffer);
 
@@ -344,9 +344,9 @@ int mark_free(DWORD cluster_index){
 	char *buffer = malloc(SECTOR_SIZE);
 	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
 	read_sector(sector_index,buffer);
-	DWORD fr = 0x00000000;
+	unsigned int fr = 0x00000000;
 	int offset = (cluster_index - ((sector_index-1)*64))*4;
-	memcpy(buffer+offset,(DWORD *) fr, sizeof(DWORD));
+	memcpy(buffer+offset,&fr, sizeof(DWORD));
 	write_sector(sector_index, buffer);
 	free(buffer);
 
@@ -1149,6 +1149,9 @@ int main(int argc, char const *argv[]) {
 	Handler *handler = lista_arq_abertos[dir];
 	printf("%d\n",(handler->posFile) );
 	*/
+
+	mark_free(0);
+	printf("%x\n", get_next_cluster(0) );
 
 	return 0;
 }
