@@ -231,7 +231,7 @@ DWORD procuraClusterVazio(){
 		for(j=0; j<64; j++){
 			cluster = dWordConvert(&index, buffer);
 			cluster_index++;
-			printf("%u\n", cluster);
+			//printf("%u\n", cluster);
 			if (cluster == 0x00000000){
 				flagAchou=1;
 				break;
@@ -334,6 +334,19 @@ int mark_EOF(DWORD cluster_index){
 	unsigned int eof = 0xFFFFFFFF;
 	int offset = (cluster_index - ((sector_index-1)*64))*4;
 	memcpy(buffer+offset, &eof, sizeof(DWORD));
+	write_sector(sector_index, buffer);
+	free(buffer);
+
+	return 0;
+}
+
+
+int mark_next(DWORD cluster_index, unsigned int bird){
+	char *buffer = malloc(SECTOR_SIZE);
+	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
+	read_sector(sector_index,buffer);
+	int offset = (cluster_index - ((sector_index-1)*64))*4;
+	memcpy(buffer+offset, &bird, sizeof(DWORD));
 	write_sector(sector_index, buffer);
 	free(buffer);
 
@@ -637,6 +650,7 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	}
 	else{
 		read_cluster(cluster_index, cluster);
+
 		memcpy(buffer, cluster + (offset), CLUSTER_SIZE - offset );
 
 		//for(i=1;) finish this for here
@@ -661,6 +675,48 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 }
 
 int write2 (FILE2 handle, char *buffer, int size){ INIT;
+	int i =0, j=0, l=0;
+	int size_sectors = size/SECTOR_SIZE;
+	int clusters_ajeitados =lista_arq_abertos[handle]->posFile/(SECTOR_SIZE*superbloco->SectorsPerCluster)-1;
+	DWORD firstCluster, next_cluster;
+
+	firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
+	do {
+		next_cluster = get_next_cluster(firstCluster);
+		if(next_cluster != 0xFFFFFFFF){
+			break;
+		}
+		firstCluster = next_cluster;
+	} while(next_cluster != 0xFFFFFFFF);
+
+	int clusternoqualestouescrevendo = firstCluster;
+
+
+	DWORD clusterVazio;
+
+	while(i<size_sectors){ //enquanto nao terminar de gravar
+		while(lista_arq_abertos[handle]->posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
+			write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
+
+			lista_arq_abertos[handle]->posFile += SECTOR_SIZE;
+			i++; // diz o quanto falta para terminar de gravar o buffer
+			j++;//diz em qual sector deste cluster nós estamos
+		}
+		j=0;
+		clusters_ajeitados++;
+
+		clusterVazio = procuraClusterVazio();
+		if (clusterVazio == -1)
+			return -1;
+		mark_next(clusternoqualestouescrevendo,clusterVazio);
+		mark_EOF(clusterVazio);
+
+		clusternoqualestouescrevendo = clusterVazio;
+		//faz o processamento para alocar um novo cluster
+	}
+	return 0;
+	//atualizar negócio do arquivo no handler disco
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a escrita de "size" bytes no arquivo identificado por "handle".
@@ -1178,8 +1234,13 @@ int main(int argc, char const *argv[]) {
 	printf("%d\n",(handler->posFile) );
 	*/
 
-	mark_free(0);
-	printf("%x\n", get_next_cluster(0) );
+	/*mark_free(0);
+	printf("%x\n", get_next_cluster(0) );*/
+
+	mkdir2("./dir");
+	print_dir(currentDir);
+	chdir2("./dir1");
+	print_dir(currentDir);
 
 	return 0;
 }
