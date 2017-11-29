@@ -952,21 +952,21 @@ DIR2 opendir2 (char *pathname){ INIT;
 int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 	char cluster_buffer[CLUSTER_SIZE];
 	int flag;
+	struct t2fs_record *novacoisa;
 	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
 		flag = read_cluster(lista_arq_abertos[handle]->fileRecord->firstCluster,cluster_buffer);
 
-		if ((!flag)&&(posFile<RECS_IN_DIR)){
-			posFile++;
-			struct t2fs_record novacoisa = malloc(sizeof(struct t2fs_record));
-			memcpy(novacoisa,cluster_buffer+REC_TAM);
+		if ((!flag)&&(lista_arq_abertos[handle]->posFile<RECS_IN_DIR)){
+			novacoisa = malloc(REC_TAM);
+			memcpy(novacoisa,cluster_buffer+REC_TAM*lista_arq_abertos[handle]->posFile, REC_TAM);
 
 			strcpy(dentry->name,novacoisa->name);
 			dentry->fileType = novacoisa->TypeVal;
 			dentry->fileSize = novacoisa->bytesFileSize;
 
+			lista_arq_abertos[handle]->posFile++;
 			return 0;
 		}
-
 	}
 
 	return -1;
