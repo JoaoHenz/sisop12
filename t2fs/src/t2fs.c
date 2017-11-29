@@ -44,9 +44,9 @@ struct t2fs_record *currentDir;
 
 Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
-/*
+
 Handler* lista_dir_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
-												NULL,NULL,NULL,NULL,NULL };*/
+												NULL,NULL,NULL,NULL,NULL };
 
 
 #define INIT {initialize();}
@@ -161,6 +161,38 @@ void initialize(){
 		initialized = 1;
 	}
 }
+int insereListaDirAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
+	int i=0, j;
+
+	for(j = 0; j < MAX_LAA; j++){
+		if (lista_dir_abertos[j] != NULL && novo_record->firstCluster == lista_dir_abertos[j]->fileRecord->firstCluster){
+			return -1;
+		}
+	}
+
+	while((i<MAX_LAA) && (lista_dir_abertos[i] != NULL)){
+		i++;
+	}
+
+
+	if (lista_dir_abertos[i] == NULL){
+		Handler *handler = malloc(sizeof(Handler));
+
+		handler->fileHandle = i;
+		handler->posFile = 0;
+		handler->fileRecord = novo_record;
+		handler->dir = dir;
+
+		lista_dir_abertos[i] = handler;
+
+		handlerCount++;
+		return i; //execução terminou com sucesso, devolve o handler
+	}
+
+	return -1; //execução acabou com erros
+
+}
+
 
 int insereListaArqAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
 	int i=0, j;
@@ -425,6 +457,9 @@ int delete2 (char *filename){ INIT;
 
 	struct t2fs_record* novo_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
 	struct t2fs_record *deleted_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
+	struct t2fs_record *old_dir= (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
+	memcpy(old_dir,currentDir,sizeof(struct t2fs_record));
+	chdir2(filename);
 
 	DWORD firstCluster = deleted_record->firstCluster;
 	free(deleted_record);
@@ -447,8 +482,8 @@ int delete2 (char *filename){ INIT;
 		firstCluster = next_cluster;
 	} while(next_cluster != 0xFFFFFFFF);
 
-
-
+	memcpy(currentDir,old_dir,sizeof(struct t2fs_record));
+	
 	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um arquivo do disco.
@@ -1075,9 +1110,13 @@ int main(int argc, char const *argv[]) {
 	//chdir2("../dir1");
 	chdir2("./dir1");
 	print_dir(currentDir);
+<<<<<<< HEAD
 	getcwd2(s, 256);
 	printf("aaa:%s\n", s);
 	printf("\n");*/
+=======
+	printf("\n");
+>>>>>>> c52afa399da707c886f839affad9ce46fa811813
 
 	/*
 	DIR2 dir = opendir2("dir1");
