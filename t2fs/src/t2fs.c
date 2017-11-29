@@ -176,7 +176,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record, struct t2fs_record *d
 		Handler *handler = malloc(sizeof(Handler));
 
 		handler->fileHandle = i;
-		handler->posFile;
+		handler->posFile = 0;
 		handler->fileRecord = novo_record;
 		handler->dir = dir;
 
@@ -905,20 +905,27 @@ int getcwd2 (char *pathname, int size){ INIT;
 DIR2 opendir2 (char *pathname){ INIT;
 	struct t2fs_record* currentDirAntigo = malloc(sizeof(struct t2fs_record));
 	int flag;
+	int handle = -1;
 
 	memcpy(currentDirAntigo,currentDir, REC_TAM);
 	flag =chdir2(pathname);
+	printf("%s\n",currentDir->name);
 
-	if((flag==0)&&(handlerCount<MAX_LAA)){
+	if(flag==0){
 		struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
-		int handle = insereListaArqAbertos(new_record,currentDir);
+		struct t2fs_record* daddy_record = malloc(REC_TAM);
+		memcpy(new_record, currentDir, REC_TAM);
 
-		memcpy(currentDir,currentDirAntigo, REC_TAM);
-		return handle;
+		char *buffer = malloc(CLUSTER_SIZE);
+		read_cluster(new_record->firstCluster, buffer);
+		memcpy(daddy_record, buffer + (1*REC_TAM), REC_TAM); //passa o pai para o currentDir
+		free(buffer);
+
+		handle = insereListaArqAbertos(new_record,daddy_record);
 	}
 
-
-	return -1;
+	memcpy(currentDir,currentDirAntigo, REC_TAM);
+	return handle;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Abre um diret�rio existente no disco.
 		O caminho desse diret�rio � aquele informado pelo par�metro "pathname".
@@ -1031,6 +1038,10 @@ int main(int argc, char const *argv[]) {
 	//printf("%s\n", s);
 	//chdir2("../dir1");
 	print_dir(currentDir);
+
+	DIR2 dir = opendir2("dir1");
+	Handler *handler = lista_arq_abertos[dir];
+	printf("%d\n",(handler->posFile) );
 
 	return 0;
 }
