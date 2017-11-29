@@ -44,9 +44,9 @@ struct t2fs_record *currentDir;
 
 Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
-/*
+
 Handler* lista_dir_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
-												NULL,NULL,NULL,NULL,NULL };*/
+												NULL,NULL,NULL,NULL,NULL };
 
 
 #define INIT {initialize();}
@@ -161,6 +161,38 @@ void initialize(){
 		initialized = 1;
 	}
 }
+int insereListaDirAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
+	int i=0, j;
+
+	for(j = 0; j < MAX_LAA; j++){
+		if (lista_dir_abertos[j] != NULL && novo_record->firstCluster == lista_dir_abertos[j]->fileRecord->firstCluster){
+			return -1;
+		}
+	}
+
+	while((i<MAX_LAA) && (lista_dir_abertos[i] != NULL)){
+		i++;
+	}
+
+
+	if (lista_dir_abertos[i] == NULL){
+		Handler *handler = malloc(sizeof(Handler));
+
+		handler->fileHandle = i;
+		handler->posFile = 0;
+		handler->fileRecord = novo_record;
+		handler->dir = dir;
+
+		lista_dir_abertos[i] = handler;
+
+		handlerCount++;
+		return i; //execução terminou com sucesso, devolve o handler
+	}
+
+	return -1; //execução acabou com erros
+
+}
+
 
 int insereListaArqAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
 	int i=0, j;
@@ -879,10 +911,9 @@ int chdir2 (char *pathname){ INIT;
 		free(subdir);
 		free(remainder);
 
-		/*free(current_path);
+		free(current_path);
 		current_path = malloc(strlen(pathname));
-		printf("aa :%s\n%s\n", current_path, pathname);
-		strcpy(current_path, pathname);*/
+		strcpy(current_path, pathname);
 
 
 	return 0;
@@ -1082,17 +1113,24 @@ int main(int argc, char const *argv[]) {
 	printf("Teste 1 Name: %s\n", testrec2->name);
 	*/
 
-	char *s = malloc(256);
-	chdir2("./dir1");
+	/*char *s = malloc(256);
+
 	print_dir(currentDir);
 
 	//chdir2("./root");
 	getcwd2(s, 256);
-	//printf("%s\n", s);
+	printf("aaa:%s\n", s);
 	//chdir2("../dir1");
+	chdir2("./dir1");
 	print_dir(currentDir);
+<<<<<<< HEAD
+	getcwd2(s, 256);
+	printf("aaa:%s\n", s);
+	printf("\n");*/
+=======
 	printf("\n");
-	
+>>>>>>> c52afa399da707c886f839affad9ce46fa811813
+
 	/*
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
