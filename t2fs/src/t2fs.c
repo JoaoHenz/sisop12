@@ -156,11 +156,18 @@ void initialize(){
 }
 
 int insereListaArqAbertos(struct t2fs_record* novo_record){
-	int i=0;
+	int i=0, j;
+
+	for(j = 0; j < MAX_LAA; j++){
+		if (lista_arq_abertos[j] != NULL && novo_record->firstCluster == lista_arq_abertos[j]->fileRecord->firstCluster){
+			return -1;
+		}
+	}
 
 	while((i<MAX_LAA) && (lista_arq_abertos[i] != NULL)){
 		i++;
 	}
+
 	
 	if (lista_arq_abertos[i] == NULL){
 		Handler *handler = malloc(sizeof(Handler));
@@ -859,6 +866,8 @@ int main(int argc, char const *argv[]) {
 	printf("File Code: %d\n",i);
 	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
+	i = open2("/file1.txt");
+	printf("File Code: %d\n",i);
 	/*
 	struct t2fs_record* testrec1 = malloc(sizeof(struct t2fs_record));
 	struct t2fs_record* testrec2 = malloc(sizeof(struct t2fs_record));

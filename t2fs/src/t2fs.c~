@@ -156,11 +156,18 @@ void initialize(){
 }
 
 int insereListaArqAbertos(struct t2fs_record* novo_record){
-	int i=0;
+	int i=0, j;
+
+	for(j = 0; j < MAX_LAA; j++){
+		if (lista_arq_abertos[j] != NULL && novo_record->firstCluster == lista_arq_abertos[j]->fileRecord->firstCluster){
+			return -2;
+		}
+	}
 
 	while((i<MAX_LAA) && (lista_arq_abertos[i] != NULL)){
 		i++;
 	}
+
 	
 	if (lista_arq_abertos[i] == NULL){
 		Handler *handler = malloc(sizeof(Handler));
@@ -492,6 +499,45 @@ int close2 (FILE2 handle){ INIT;
 }
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
+	Handler *handler = lista_arq_abertos[handle];
+	struct t2fs_record *this_record = handler->fileRecord;
+
+	DWORD clusters_toread = (size+(handler->posFile%CLUSTER_SIZE) + (CLUSTER_SIZE-1))/CLUSTER_SIZE; //ROUND UP
+	DWORD current_cluster = handler->posFile/CLUSTER_SIZE;
+	DWORD cluster_index = -1;
+	DWORD firstCluster = this_record->firstCluster;
+	int i=0;
+	int bytes_read = 0;
+	char *cluster = malloc(CLUSTER_SIZE);
+
+	for(i=0; i<current_cluster; i++){
+		cluster_index = get_next_cluster(firstCluster);
+		firstCluster = cluster_index;
+	}
+	i=0;
+
+	int offset = handler->posFile%CLUSTER_SIZE;
+
+	if(clusters_toread == 1){
+		read_cluster(cluster_index, cluster);
+		memcpy(buffer, cluster + offset, size);
+		free(cluster);
+	}else if (clusters_toread == 2){
+		read_cluster(cluster_index, cluster);
+		memcpy(buffer, cluster + (offset), CLUSTER_SIZE - offset );
+		read_cluster(get_next_cluster(cluster_index), cluster);
+		memcpy(buffer + CLUSTER_SIZE - offset, cluster, size - (CLUSTER_SIZE - offset) );
+		free(buffer);
+	}
+	else{
+		read_cluster(cluster_index, cluster);
+		memcpy(buffer, cluster + (offset), CLUSTER_SIZE - offset );
+
+		//for(i=1;) finish this for here
+
+	}
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura de "size" bytes do arquivo identificado por "handle".
@@ -808,7 +854,7 @@ int main(int argc, char const *argv[]) {
 	printf("Root Directory Start Cluster: %u\n",(unsigned short int) superbloco->RootDirCluster);
 	printf("Data Start Sector: %u\n",(unsigned short int) superbloco->DataSectorStart);
 
-	printf("\nOpen2 Tests:");
+	printf("\nOpen2 Tests:\n");
 	i = open2("/dir1/dir2/dir3/dir4/dir5/file.txt");
 	printf("File Code: %d\n\n",i);
 
@@ -817,6 +863,10 @@ int main(int argc, char const *argv[]) {
 	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
 	i = open2("/file2.txt");
+	printf("File Code: %d\n",i);
+	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
+
+	i = open2("/file1.txt");
 	printf("File Code: %d\n",i);
 	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
