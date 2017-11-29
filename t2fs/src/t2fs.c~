@@ -1133,14 +1133,14 @@ int main(int argc, char const *argv[]) {
 	printf("Dir Code: %d\n\n",i);
 	*/
 
-	/*
+	
 	i = opendir2("./");
 	DIRENT2 *dentry;
 	lista_dir_abertos[i]->posFile = 0;
 	readdir2(i, dentry);
 
 	printf("Name of nigga: %s\n", dentry->name);
-	*/
+	
 	/*
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];

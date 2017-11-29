@@ -574,6 +574,8 @@ int close2 (FILE2 handle){ INIT;
 }
 
 int read2 (FILE2 handle, char *buffer, int size){ INIT;
+
+	/*
 	Handler *handler = lista_arq_abertos[handle];
 	struct t2fs_record *this_record = handler->fileRecord;
 
@@ -613,7 +615,7 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	}
 
 
-	return -1;
+	return -1;*/
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura de "size" bytes do arquivo identificado por "handle".
 		Os bytes lidos s�o colocados na �rea apontada por "buffer".
