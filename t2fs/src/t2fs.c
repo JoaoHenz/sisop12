@@ -33,6 +33,7 @@ typedef struct fileHandler{
 	int fileHandle;	//handle do arquivo
 	int posFile;		//current position pointer do arquivo
 	struct t2fs_record *fileRecord;		//pointer para o record do arquivo
+	struct t2fs_record *dir; //pointer para o dir onde está o arquivo
 } Handler;
 
 struct t2fs_superbloco *superbloco;
@@ -155,7 +156,7 @@ void initialize(){
 	}
 }
 
-int insereListaArqAbertos(struct t2fs_record* novo_record){
+int insereListaArqAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
 	int i=0, j;
 
 	for(j = 0; j < MAX_LAA; j++){
@@ -175,6 +176,7 @@ int insereListaArqAbertos(struct t2fs_record* novo_record){
 		handler->fileHandle = i;
 		handler->posFile;
 		handler->fileRecord = novo_record;
+		handler->dir = dir;
 
 		lista_arq_abertos[i] = handler;
 		//(*lista_arq_abertos[i]) = (t2fs_record) malloc(sizeof(t2fs_record));
@@ -368,7 +370,7 @@ FILE2 create2 (char *filename){ INIT;
 		//TODO tratamento limpar o que foi feito antes
 		return -1;
 	}
-	int handle = insereListaArqAbertos(novo_record);
+	int handle = insereListaArqAbertos(novo_record, currentDir);
 	mark_EOF(novo_record->firstCluster);
 	write_rec_to_disk(novo_record);
 
@@ -445,12 +447,17 @@ FILE2 open2 (char *filename){ INIT;
 	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
 	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
 
+	//FERNANDO VÊ ISSO PRA EU
+	struct t2fs_record *this_dir;
+
 	parsePath(filename, subdir, remainder);
 	//printf("%s\n%s\n\n", subdir,remainder);
 	if(filename[0] == '.'){ //
+		this_dir = currentDir;
 		if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
 	}
 	else{
+		this_dir = rootDir;
 		if (getFileRecord(rootDir, subdir, record_aux) == -1) return -1;
 	}
 	while(strcmp(remainder, nullstring) != 0){
@@ -459,12 +466,13 @@ FILE2 open2 (char *filename){ INIT;
 		strcpy(remainder, nullstring);
 		parsePath(aux_path, subdir, remainder);
 		//printf("%s\n%s\n\n", subdir, remainder);
+		this_dir = record_aux;
 		if (getFileRecord(record_aux, subdir, record_aux) == -1) return -1;
 	}
 	memcpy(new_record, record_aux, sizeof(struct t2fs_record));
 	//int getFileRecord(struct t2fs_record* directory, char* filename, struct t2fs_record* file){
 
-	int handle = insereListaArqAbertos(new_record);
+	int handle = insereListaArqAbertos(new_record, this_dir);
 	free(record_aux);
 	return handle;
 	/*-----------------------------------------------------------------------------
@@ -571,6 +579,12 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 }
 
 int truncate2 (FILE2 handle){ INIT;
+
+	struct t2fs_record *record = lista_arq_abertos[handle]->fileRecord;
+	Handler *handler = lista_arq_abertos[handle];
+
+
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fun��o usada para truncar um arquivo.
@@ -813,7 +827,7 @@ int getcwd2 (char *pathname, int size){ INIT;
 }
 
 DIR2 opendir2 (char *pathname){ INIT;
-	struct t2fs_record* currentDirAntigo = malloc(sizeof(struct t2fs_record));
+	/*struct t2fs_record* currentDirAntigo = malloc(sizeof(struct t2fs_record));
 	int flag;
 
 	memcpy(currentDirAntigo,currentDir, REC_TAM);
@@ -826,7 +840,7 @@ DIR2 opendir2 (char *pathname){ INIT;
 
 		memcpy(currentDir,currentDirAntigo, REC_TAM);
 		return handle;
-	}
+	}*/
 
 
 	return -1;
