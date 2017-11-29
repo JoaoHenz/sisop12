@@ -638,7 +638,7 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	int currentPointer = lista_arq_abertos[handle]->posFile;
 	int firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
 	char *bufferAux = malloc(256);
-	char 
+	char
 
 	if (handle >= MAX_LAA || handle < 0){ // handler out of bounds error
 		return -1;
@@ -646,12 +646,12 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 
 	FATClusterIndex = firstCluster + currentPointer / (256 * superbloco->SectorsPerCluster);
 	FATSectorIndex = superbloco->pFATSectorStart + (FATClusterIndex / 64);
-	
+
 	while(!fileRead){
 		read_sector(FATSectorIndex,bufferAux);
-		
+
 	}*/
-		
+
 
 	/*
 	Handler *handler = lista_arq_abertos[handle];
@@ -748,10 +748,10 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 		mark_EOF(clusterVazio);
 
 		clusternoqualestouescrevendo = clusterVazio;
-		//faz o processamento para alocar um novo cluster		
+		//faz o processamento para alocar um novo cluster
 	}
 	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
-	// WRITE UPDATED RECORD 
+	// WRITE UPDATED RECORD
 	return 0;
 	//atualizar negócio do arquivo no handler disco
 
@@ -845,53 +845,82 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 }
 
 int mkdir2 (char *pathname){ INIT;
-	int i=0, j=0;
-	char cluster_buffer[CLUSTER_SIZE];
-	char newdirname[100], newdirpath[1000];
-	//filename = pega final do pathname se for o path for válido
+	char *aux_path = malloc(64);
+	char *subdir = malloc(64);
+	char *remainder = malloc(64);
+	char *nullstring = "\0";
+	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
 
-	strcpy(newdirpath,pathname);
-	while(newdirpath[i]!='\0') i++;
-	while(newdirpath[i]!= '/') i--;
-	newdirpath[i]= '\0';
+	//FERNANDO VÊ ISSO PRA EU
+	struct t2fs_record *this_dir;
 
-	if (chdir2(newdirpath)==0){
-		i=0;j=0;
-	 	while(pathname[i]!='\0') i++;
-		while(pathname[i]!= '/') i--;
-		while(pathname[i]!= '\0') {newdirname[j]=pathname[i];j++;i++;}
-		newdirname[j]='\0';
-
-
-		struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
-
-		novo_record->TypeVal = 0x02;//tipo arquivo simples
-		strcpy(novo_record->name,newdirname);
-		novo_record->bytesFileSize = 0;
-		novo_record->firstCluster = procuraClusterVazio() ;
-
-		if(novo_record->firstCluster == -1){
-			//TODO tratamento limpar o que foi feito antes
-			return -1;
-		}
-
-		mark_EOF(novo_record->firstCluster);
-		write_rec_to_disk(novo_record);
-
-
-		novo_record->TypeVal = 0x00;//tipo arquivo simples
-		strcpy(novo_record->name ,"");
-		novo_record->bytesFileSize = 0;
-		novo_record->firstCluster = 0 ;
-		for(i=0;i<RECS_IN_DIR;i++){
-			memcpy(cluster_buffer + (i*REC_TAM),novo_record, REC_TAM);
-		}
-
-		return 0;
+	parsePath(pathname, subdir, remainder);
+	//printf("%s\n%s\n\n", subdir,remainder);
+	if(pathname[0] == '.'){ //
+		this_dir = currentDir;
+		if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
+	}
+	else{
+		this_dir = rootDir;
+		getFileRecord(rootDir, subdir, record_aux) ;
+	}
+	while(strcmp(remainder, nullstring) != 0){
+		strcpy(subdir, nullstring);
+		strcpy(aux_path, remainder);
+		strcpy(remainder, nullstring);
+		parsePath(aux_path, subdir, remainder);
+		//printf("%s\n%s\n\n", subdir, remainder);
+		this_dir = record_aux;
+		getFileRecord(record_aux, subdir, record_aux);
 	}
 
+	struct t2fs_record *currentDirAntigo = malloc(REC_TAM);
+	memcpy(currentDirAntigo, currentDir, REC_TAM);
+	memcpy(currentDir, this_dir, REC_TAM);
 
-	return -1;
+
+	struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
+
+	novo_record->TypeVal = 0x02; //tipo arquivo simples
+	novo_record->bytesFileSize = CLUSTER_SIZE;
+	strcpy(novo_record->name ,subdir);
+	novo_record->firstCluster = procuraClusterVazio() ;
+
+	if(novo_record->firstCluster == -1){
+		//TODO tratamento limpar o que foi feito antes
+		return -1;
+	}
+
+	mark_EOF(novo_record->firstCluster);
+	DWORD firstCluster = novo_record->firstCluster;
+	write_rec_to_disk(novo_record);
+
+	char *cluster_buffer = malloc(CLUSTER_SIZE);
+
+
+	strcpy(novo_record->name ,".");
+
+	memcpy(cluster_buffer + (0*REC_TAM),novo_record, REC_TAM);
+	strcpy(novo_record->name ,"..");
+	novo_record->firstCluster = currentDir->firstCluster;
+	memcpy(cluster_buffer + (1*REC_TAM),novo_record, REC_TAM);
+
+	int i;
+
+	novo_record->TypeVal = 0x00;//tipo arquivo simples
+	strcpy(novo_record->name ,"");
+	novo_record->bytesFileSize = 0;
+	novo_record->firstCluster = 0 ;
+	for(i=2;i<RECS_IN_DIR;i++){
+		memcpy(cluster_buffer + (i*REC_TAM),novo_record, REC_TAM);
+	}
+
+	write_cluster(firstCluster, cluster_buffer);
+
+	memcpy(currentDir, currentDirAntigo, REC_TAM);
+
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Criar um novo diret�rio.
 		O caminho desse novo diret�rio � aquele informado pelo par�metro "pathname".
@@ -1278,11 +1307,11 @@ int main(int argc, char const *argv[]) {
 
 	printf("Name of nigga: %s\n", dentry->name);
 
-	
+
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
 	printf("%d\n",(handler->posFile) );
-	
+
 
 	mark_free(0);
 	printf("%x\n", get_next_cluster(0) );
@@ -1292,7 +1321,11 @@ int main(int argc, char const *argv[]) {
 	chdir2("./dir1");
 	print_dir(currentDir);
 	*/
-	
+
+	/*mkdir2("dir3");
+	print_dir(currentDir);
+	chdir2("./dir3");
+	print_dir(currentDir);*/
 
 	return 0;
 }
