@@ -165,12 +165,6 @@ void initialize(){
 int insereListaArqAbertos(struct t2fs_record* novo_record, struct t2fs_record *dir){
 	int i=0, j;
 
-	for(j = 0; j < MAX_LAA; j++){
-		if (lista_arq_abertos[j] != NULL && novo_record->firstCluster == lista_arq_abertos[j]->fileRecord->firstCluster){
-			return -1;
-		}
-	}
-
 	while((i<MAX_LAA) && (lista_arq_abertos[i] != NULL)){
 		i++;
 	}
@@ -379,9 +373,14 @@ int identify2 (char *name, int size){ INIT;
 }
 
 FILE2 create2 (char *filename){ INIT;
+	char *aux_path = malloc(64);
+	char *subdir = malloc(64);
+	char *remainder = malloc(64);
+	char *nullstring = "\0";
 
 	struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
-
+	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
+	struct t2fs_record* old_dir = malloc(sizeof(struct t2fs_record));
 	novo_record->TypeVal = 0x01;//tipo arquivo simples
 	strcpy(novo_record->name,filename);
 	novo_record->bytesFileSize = 0;
@@ -393,7 +392,21 @@ FILE2 create2 (char *filename){ INIT;
 	}
 	int handle = insereListaArqAbertos(novo_record, currentDir);
 	mark_EOF(novo_record->firstCluster);
+
+	parsePath(filename, subdir, remainder);
+	while(strcmp(remainder, nullstring) != 0){
+		strcpy(subdir, nullstring);
+		strcpy(aux_path, remainder);
+		strcpy(remainder, nullstring);
+		parsePath(aux_path, subdir, remainder);
+		//printf("%s\n%s\n\n", subdir, remainder);
+		if (getFileRecord(record_aux, subdir, record_aux) == -1) return -1;
+	}
+	memcpy(old_dir,currentDir,sizeof(struct t2fs_record));
+	memcpy(currentDir,record_aux,sizeof(struct t2fs_record));
+	//parsePath(char* path, char* subdir, char* remainder)
 	write_rec_to_disk(novo_record);
+	memcpy(currentDir,old_dir,sizeof(struct t2fs_record));
 
 	if(handle)
 		return handle;
