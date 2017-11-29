@@ -31,7 +31,7 @@
 
 typedef struct fileHandler{
 	int fileHandle;	//handle do arquivo
-	int posFile;		//current position pointer do arquivo
+	int posFile;		//current position pointer do arquivo ou currententry de um dir
 	struct t2fs_record *fileRecord;		//pointer para o record do arquivo
 	struct t2fs_record *dir; //pointer para o dir onde está o arquivo
 } Handler;
@@ -44,6 +44,9 @@ struct t2fs_record *currentDir;
 
 Handler* lista_arq_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
 												NULL,NULL,NULL,NULL,NULL };
+/*
+Handler* lista_dir_abertos[MAX_LAA] = { NULL,NULL,NULL,NULL,NULL,
+												NULL,NULL,NULL,NULL,NULL };*/
 
 
 #define INIT {initialize();}
@@ -418,6 +421,7 @@ int delete2 (char *filename){ INIT;
 		close2(isOpen);
 	}
 
+
 	struct t2fs_record* novo_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
 	struct t2fs_record *deleted_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
 
@@ -509,10 +513,14 @@ FILE2 open2 (char *filename){ INIT;
 }
 
 int close2 (FILE2 handle){ INIT;
-	free(lista_arq_abertos[handle]->fileRecord);
-	lista_arq_abertos[handle] = NULL;
-	handlerCount--;
-	return 0;
+	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x01){
+		free(lista_arq_abertos[handle]->fileRecord);
+		lista_arq_abertos[handle] = NULL;
+		handlerCount--;
+		return 0;
+	}
+
+	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fecha o arquivo identificado pelo par�metro "handle".
 
@@ -935,6 +943,25 @@ DIR2 opendir2 (char *pathname){ INIT;
 }
 
 int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
+	char cluster_buffer[CLUSTER_SIZE];
+	int flag;
+	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
+		flag = read_cluster(lista_arq_abertos[handle]->fileRecord->firstCluster,cluster_buffer);
+
+		if ((!flag)&&(posFile<RECS_IN_DIR)){
+			posFile++;
+			struct t2fs_record novacoisa = malloc(sizeof(struct t2fs_record));
+			memcpy(novacoisa,cluster_buffer+REC_TAM);
+
+			strcpy(dentry->name,novacoisa->name);
+			dentry->fileType = novacoisa->TypeVal;
+			dentry->fileSize = novacoisa->bytesFileSize;
+
+			return 0;
+		}
+
+	}
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura das entradas do diret�rio identificado por "handle".
@@ -959,6 +986,14 @@ int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
 }
 
 int closedir2 (DIR2 handle){ INIT;
+
+	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
+		free(lista_arq_abertos[handle]->fileRecord);
+		lista_arq_abertos[handle] = NULL;
+		handlerCount--;
+		return 0;
+	}
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Fecha o diret�rio identificado pelo par�metro "handle".
