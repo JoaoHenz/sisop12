@@ -332,7 +332,8 @@ int mark_EOF(DWORD cluster_index){
 	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
 	read_sector(sector_index,buffer);
 	DWORD eof = 0xFFFFFFFF;
-	memcpy(buffer+(cluster_index%64),(DWORD *) eof, sizeof(DWORD));
+	int offset = (cluster_index - ((sector_index-1)*64))*4;
+	memcpy(buffer+offset,(DWORD *) eof, sizeof(DWORD));
 	write_sector(sector_index, buffer);
 	free(buffer);
 
@@ -344,7 +345,8 @@ int mark_free(DWORD cluster_index){
 	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
 	read_sector(sector_index,buffer);
 	DWORD fr = 0x00000000;
-	memcpy(buffer+(cluster_index%64),(DWORD *) fr, sizeof(DWORD));
+	int offset = (cluster_index - ((sector_index-1)*64))*4;
+	memcpy(buffer+offset,(DWORD *) fr, sizeof(DWORD));
 	write_sector(sector_index, buffer);
 	free(buffer);
 
@@ -356,7 +358,8 @@ DWORD get_next_cluster(DWORD cluster_index){
 	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
 	read_sector(sector_index,buffer);
 	DWORD point_value;
-	memcpy(&point_value,buffer+(cluster_index%64), sizeof(DWORD));
+	int offset = (cluster_index - ((sector_index-1)*64))*4;
+	memcpy(&point_value,buffer+offset, sizeof(DWORD));
 	free(buffer);
 
 	return point_value;
@@ -489,7 +492,7 @@ int delete2 (char *filename){ INIT;
 	} while(next_cluster != 0xFFFFFFFF);
 
 	memcpy(currentDir,old_dir,sizeof(struct t2fs_record));
-	
+
 	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um arquivo do disco.
@@ -1120,27 +1123,27 @@ int main(int argc, char const *argv[]) {
 
 	/*
 	i = opendir2("/dir1");
-	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);	
+	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);
 	printf("Dir name of new Dir is: %s\n",lista_dir_abertos[i]->fileRecord->name);
 	printf("Dir size of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->bytesFileSize);
 	printf("Dir first cluster of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->firstCluster);
 	printf("Dir Code: %d\n\n",i);
 	closedir2(0);
-	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);	
+	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);
 	printf("Dir name of new Dir is: %s\n",lista_dir_abertos[i]->fileRecord->name);
 	printf("Dir size of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->bytesFileSize);
 	printf("Dir first cluster of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->firstCluster);
 	printf("Dir Code: %d\n\n",i);
 	*/
 
-	
+
 	i = opendir2("./");
 	DIRENT2 *dentry;
 	lista_dir_abertos[i]->posFile = 0;
 	readdir2(i, dentry);
 
 	printf("Name of nigga: %s\n", dentry->name);
-	
+
 	/*
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
