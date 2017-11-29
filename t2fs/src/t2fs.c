@@ -748,8 +748,10 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 		mark_EOF(clusterVazio);
 
 		clusternoqualestouescrevendo = clusterVazio;
-		//faz o processamento para alocar um novo cluster
+		//faz o processamento para alocar um novo cluster		
 	}
+	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
+	// WRITE UPDATED RECORD 
 	return 0;
 	//atualizar negócio do arquivo no handler disco
 
@@ -1177,9 +1179,21 @@ int main(int argc, char const *argv[]) {
 	/* temp main for testin */
 	INIT;
 
+	int i;
 
 
+	i = open2("/file1.txt");
 
+	printf("File Code: %d\n",i);
+	printf("Filename of new file is: %s\n", lista_arq_abertos[i]->fileRecord->name);
+	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
+	write2(i,"nigger",6);
+	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
+	char *buffer = malloc(61);
+	read2(i,buffer,61);
+	printf("SHIT I READ: %s\n", buffer);
+
+	/*
 	char *name = malloc(128);
 	int i, j = 0;
 
@@ -1216,7 +1230,7 @@ int main(int argc, char const *argv[]) {
 	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
 
  	i = open2("/file1.txt");
-	printf("File Code: %d\n\n",i);
+	printf("File Code: %d\n\n",i);*/
 	/*
 	struct t2fs_record* testrec1 = malloc(sizeof(struct t2fs_record));
 	struct t2fs_record* testrec2 = malloc(sizeof(struct t2fs_record));
@@ -1256,7 +1270,7 @@ int main(int argc, char const *argv[]) {
 	printf("Dir Code: %d\n\n",i);
 	*/
 
-
+	/*
 	i = opendir2("./");
 	DIRENT2 *dentry;
 	lista_dir_abertos[i]->posFile = 0;
@@ -1264,19 +1278,21 @@ int main(int argc, char const *argv[]) {
 
 	printf("Name of nigga: %s\n", dentry->name);
 
-	/*
+	
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
 	printf("%d\n",(handler->posFile) );
-	*/
+	
 
-	/*mark_free(0);
-	printf("%x\n", get_next_cluster(0) );*/
+	mark_free(0);
+	printf("%x\n", get_next_cluster(0) );
 
 	mkdir2("./dir");
 	print_dir(currentDir);
 	chdir2("./dir1");
 	print_dir(currentDir);
+	*/
+	
 
 	return 0;
 }
