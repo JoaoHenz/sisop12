@@ -679,31 +679,51 @@ int mkdir2 (char *pathname){ INIT;
 
 int rmdir2 (char *pathname){ INIT;
 	//TODO malandragem para ler o dir com o pathname e colocá-lo em dir
+	//setar o currDir como o pai do dir a ser removido
 
+	struct t2fs_record *currentDirAntigo = malloc(REC_TAM);
+	memcpy(currentDirAntigo, currentDir, REC_TAM);
 	struct t2fs_record *dir = malloc(REC_TAM);
 	struct t2fs_record *entry = malloc(REC_TAM);
 	int i;
-	int foundFile = 0;
 	char *buffer = malloc(CLUSTER_SIZE);
 	read_cluster(dir->firstCluster, buffer);
 	//check if there are files
 
+	memcpy(currentDir, buffer + (1*REC_TAM), REC_TAM); //passa o pai para o currentDir
 	for(i=2; i<RECS_IN_DIR; i++){  //entries 0 and 1 are . and .. and are always there
 		memcpy(entry, buffer + (i*REC_TAM), REC_TAM);
 		//printf("%s\n",record->name );
 		if(entry->TypeVal != 0x00){
 			free(entry);
-			foundFile = 1;
-			break;
+			free(buffer);
+			free(dir);
+			//retorna o currDir de verdade
+			memcpy(currentDir, currentDirAntigo, REC_TAM);
+			free(currentDirAntigo);
+
+			return -1; //dir is not empty
 		}
 	}
+	free(buffer);
 
-	if(foundFile == 1){
-		return -1;  //dir is not empty
-	}
+	//move on to deleting the dir
+	mark_free(dir->firstCluster);
+
+	dir->TypeVal = 0x00;//tiporecord livre
+	strcpy(dir->name,"");
+	dir->bytesFileSize = 0;
+	dir->firstCluster = 0;
+
+	write_rec_to_disk(dir);
+	free(dir);
+
+	//retorna o currDir de verdade
+	memcpy(currentDir, currentDirAntigo, REC_TAM);
+	free(currentDirAntigo);
 
 
-	return -1;
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um subdiret�rio do disco.
 		O caminho do diret�rio a ser apagado � aquele informado pelo par�metro "pathname".
