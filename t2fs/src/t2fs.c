@@ -340,6 +340,19 @@ int mark_EOF(DWORD cluster_index){
 	return 0;
 }
 
+
+int mark_next(DWORD cluster_index, unsigned int bird){
+	char *buffer = malloc(SECTOR_SIZE);
+	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
+	read_sector(sector_index,buffer);
+	int offset = (cluster_index - ((sector_index-1)*64))*4;
+	memcpy(buffer+offset, &bird, sizeof(DWORD));
+	write_sector(sector_index, buffer);
+	free(buffer);
+
+	return 0;
+}
+
 int mark_free(DWORD cluster_index){
 	char *buffer = malloc(SECTOR_SIZE);
 	DWORD sector_index = superbloco->pFATSectorStart + ((DWORD)(cluster_index/64));
@@ -609,6 +622,7 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	}
 	else{
 		read_cluster(cluster_index, cluster);
+
 		memcpy(buffer, cluster + (offset), CLUSTER_SIZE - offset );
 
 		//for(i=1;) finish this for here
@@ -633,6 +647,48 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 }
 
 int write2 (FILE2 handle, char *buffer, int size){ INIT;
+	int i =0; j=0; l=0;
+	int size_sectors = size/SECTOR_SIZE;
+	int clusters_ajeitados = posFile/(SECTOR_SIZE*SectorsPerCluster)-1;
+	DWORD firstCluster, next_cluster;
+
+	firstCluster = handle->fileRecord->firstCluster;
+	do {
+		next_cluster = get_next_cluster(firstCluster);
+		if(next_cluster != 0xFFFFFFFF){
+			break;
+		}
+		firstCluster = next_cluster;
+	} while(next_cluster != 0xFFFFFFFF);
+
+	int clusternoqualestouescrevendo = firstCluster;
+
+
+	DWORD clusterVazio;
+
+	while(i<size_sectors){ //enquanto nao terminar de gravar
+		while(posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
+			write_sector(clusternoqualestouescrevendo*SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
+
+			posFile += SECTOR_SIZE;
+			i++; // diz o quanto falta para terminar de gravar o buffer
+			j++;//diz em qual sector deste cluster nós estamos
+		}
+		j=0;
+		clusters_ajeitados++;
+
+		clusterVazio = procuraClusterVazio();
+		if (clusterVazio == -1)
+			return -1;
+		mark_next(clusternoqualestouescrevendo,clustervazio);
+		mark_EOF(clusterVazio);
+
+		clusternoqualestouescrevendo = clustervazio;
+		//faz o processamento para alocar um novo cluster
+	}
+	return 0;
+	//atualizar negócio do arquivo no handler disco
+
 	return -1;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a escrita de "size" bytes no arquivo identificado por "handle".
