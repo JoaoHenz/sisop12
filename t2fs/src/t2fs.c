@@ -457,6 +457,9 @@ int delete2 (char *filename){ INIT;
 
 	struct t2fs_record* novo_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
 	struct t2fs_record *deleted_record = (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
+	struct t2fs_record *old_dir= (struct t2fs_record *) malloc(sizeof(struct t2fs_record));
+	memcpy(old_dir,currentDir,sizeof(struct t2fs_record));
+	chdir2(filename);
 
 	DWORD firstCluster = deleted_record->firstCluster;
 	free(deleted_record);
@@ -479,8 +482,8 @@ int delete2 (char *filename){ INIT;
 		firstCluster = next_cluster;
 	} while(next_cluster != 0xFFFFFFFF);
 
-
-
+	memcpy(currentDir,old_dir,sizeof(struct t2fs_record));
+	
 	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Apagar um arquivo do disco.
