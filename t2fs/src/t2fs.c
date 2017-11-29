@@ -863,10 +863,9 @@ int chdir2 (char *pathname){ INIT;
 		free(subdir);
 		free(remainder);
 
-		/*free(current_path);
+		free(current_path);
 		current_path = malloc(strlen(pathname));
-		printf("aa :%s\n%s\n", current_path, pathname);
-		strcpy(current_path, pathname);*/
+		strcpy(current_path, pathname);
 
 
 	return 0;
@@ -1066,17 +1065,20 @@ int main(int argc, char const *argv[]) {
 	printf("Teste 1 Name: %s\n", testrec2->name);
 	*/
 
-	char *s = malloc(256);
-	chdir2("./dir1");
+	/*char *s = malloc(256);
+
 	print_dir(currentDir);
 
 	//chdir2("./root");
 	getcwd2(s, 256);
-	//printf("%s\n", s);
+	printf("aaa:%s\n", s);
 	//chdir2("../dir1");
+	chdir2("./dir1");
 	print_dir(currentDir);
-	printf("\n");
-	
+	getcwd2(s, 256);
+	printf("aaa:%s\n", s);
+	printf("\n");*/
+
 	/*
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
