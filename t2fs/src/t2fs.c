@@ -751,11 +751,16 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 		//faz o processamento para alocar um novo cluster
 	}
 	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
-	// WRITE UPDATED RECORD
+	char *dir_buffer = malloc(CLUSTER_SIZE);
+	read_cluster(lista_arq_abertos[handle]->dir->firstCluster, dir_buffer);
+	int arq_ind = find_name_rec_in_dir(dir_buffer, lista_arq_abertos[handle]->fileRecord->name);
+	insert_rec_in_dir(dir_buffer, arq_ind, lista_arq_abertos[handle]->fileRecord);
+	free(buffer);
+
 	return 0;
 	//atualizar negócio do arquivo no handler disco
 
-	return -1;
+
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a escrita de "size" bytes no arquivo identificado por "handle".
 		Os bytes a serem escritos est�o na �rea apontada por "buffer".
@@ -1208,7 +1213,7 @@ int main(int argc, char const *argv[]) {
 	/* temp main for testin */
 	INIT;
 
-	int i;
+	/*int i;
 
 
 	i = open2("/file1.txt");
@@ -1326,6 +1331,7 @@ int main(int argc, char const *argv[]) {
 	print_dir(currentDir);
 	chdir2("./dir3");
 	print_dir(currentDir);*/
+
 
 	return 0;
 }
