@@ -726,13 +726,23 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 	} while(next_cluster != 0xFFFFFFFF);
 
 	int clusternoqualestouescrevendo = firstCluster;
-
-
+	char bufferzao[SECTOR_SIZE];
+	printf("\nseg fault %d\n",size );
 	DWORD clusterVazio;
 
-	while(i<size_sectors){ //enquanto nao terminar de gravar
+	do{ //enquanto nao terminar de gravar
 		while(lista_arq_abertos[handle]->posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
-			write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
+			if (i*SECTOR_SIZE+SECTOR_SIZE > size){ //caso o buffer esteja acabando, copia byte a byte
+				l=0;
+				while(i*SECTOR_SIZE+l > size){
+
+					printf("\nbomdia");
+					memcpy(&bufferzao+l,buffer+i*SECTOR_SIZE+l,sizeof(char));
+					l++;
+				}
+			}
+			else //senao ele copia um sector inteiro
+				write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
 
 			lista_arq_abertos[handle]->posFile += SECTOR_SIZE;
 			i++; // diz o quanto falta para terminar de gravar o buffer
@@ -749,7 +759,7 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 
 		clusternoqualestouescrevendo = clusterVazio;
 		//faz o processamento para alocar um novo cluster
-	}
+	}while(i<size_sectors);
 	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
 	// WRITE UPDATED RECORD
 	return 0;
