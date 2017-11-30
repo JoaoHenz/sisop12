@@ -844,7 +844,7 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 			return 0;
 		}
 		else{
-			lista_arq_abertos[handle]->posFile = lista_arq_abertos[handle]->fileRecord->bytesFileSize+1;
+			lista_arq_abertos[handle]->posFile = lista_arq_abertos[handle]->fileRecord->bytesFileSize;
 			return 0;
 		}
 
@@ -1283,8 +1283,8 @@ int main(int argc, char const *argv[]) {
 	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
 	write2(i,"nigger",6);
 	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
-	char *buffer = malloc(61);
-	read2(i,buffer,61);
+	char *buffer = malloc(lista_arq_abertos[i]->fileRecord->bytesFileSize);
+	read2(i,buffer,lista_arq_abertos[i]->fileRecord->bytesFileSize);
 	printf("SHIT I READ: %s\n", buffer);
 
 	/*
