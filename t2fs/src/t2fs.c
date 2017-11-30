@@ -726,23 +726,13 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 	} while(next_cluster != 0xFFFFFFFF);
 
 	int clusternoqualestouescrevendo = firstCluster;
-	char bufferzao[SECTOR_SIZE];
-	printf("\nseg fault %d\n",size );
+
+
 	DWORD clusterVazio;
 
-	do{ //enquanto nao terminar de gravar
+	while(i<size_sectors){ //enquanto nao terminar de gravar
 		while(lista_arq_abertos[handle]->posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
-			if (i*SECTOR_SIZE+SECTOR_SIZE > size){ //caso o buffer esteja acabando, copia byte a byte
-				l=0;
-				while(i*SECTOR_SIZE+l > size){
-
-					printf("\nbomdia");
-					memcpy(&bufferzao+l,buffer+i*SECTOR_SIZE+l,sizeof(char));
-					l++;
-				}
-			}
-			else //senao ele copia um sector inteiro
-				write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
+			write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
 
 			lista_arq_abertos[handle]->posFile += SECTOR_SIZE;
 			i++; // diz o quanto falta para terminar de gravar o buffer
@@ -759,13 +749,14 @@ int write2 (FILE2 handle, char *buffer, int size){ INIT;
 
 		clusternoqualestouescrevendo = clusterVazio;
 		//faz o processamento para alocar um novo cluster
-	}while(i<size_sectors);
+	}
 	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
 	char *dir_buffer = malloc(CLUSTER_SIZE);
 	read_cluster(lista_arq_abertos[handle]->dir->firstCluster, dir_buffer);
 	int arq_ind = find_name_rec_in_dir(dir_buffer, lista_arq_abertos[handle]->fileRecord->name);
 	insert_rec_in_dir(dir_buffer, arq_ind, lista_arq_abertos[handle]->fileRecord);
-	free(buffer);
+	write_cluster(lista_arq_abertos[handle]->dir->firstCluster, dir_buffer);
+	free(dir_buffer);
 
 	return 0;
 	//atualizar negócio do arquivo no handler disco
@@ -951,19 +942,51 @@ int mkdir2 (char *pathname){ INIT;
 }
 
 int rmdir2 (char *pathname){ INIT;
-	//TODO malandragem para ler o dir com o pathname e colocá-lo em dir
-	//setar o currDir como o pai do dir a ser removido
+	char *aux_path = malloc(64);
+	char *subdir = malloc(64);
+	char *remainder = malloc(64);
+	char *nullstring = "\0";
+	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
+
+	//FERNANDO VÊ ISSO PRA EU
+	struct t2fs_record *this_dir;
+
+	parsePath(pathname, subdir, remainder);
+	//printf("%s\n%s\n\n", subdir,remainder);
+	if(pathname[0] == '.'){ //
+		this_dir = currentDir;
+		if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
+	}
+	else{
+		this_dir = rootDir;
+		getFileRecord(rootDir, subdir, record_aux) ;
+	}
+	while(strcmp(remainder, nullstring) != 0){
+		strcpy(subdir, nullstring);
+		strcpy(aux_path, remainder);
+		strcpy(remainder, nullstring);
+		parsePath(aux_path, subdir, remainder);
+		//printf("%s\n%s\n\n", subdir, remainder);
+		this_dir = record_aux;
+		getFileRecord(record_aux, subdir, record_aux);
+	}
 
 	struct t2fs_record *currentDirAntigo = malloc(REC_TAM);
 	memcpy(currentDirAntigo, currentDir, REC_TAM);
+	memcpy(currentDir, this_dir, REC_TAM);
+
+
 	struct t2fs_record *dir = malloc(REC_TAM);
+	getFileRecord(currentDir, subdir, dir);
+
 	struct t2fs_record *entry = malloc(REC_TAM);
 	int i;
 	char *buffer = malloc(CLUSTER_SIZE);
 	read_cluster(dir->firstCluster, buffer);
 	//check if there are files
 
-	memcpy(currentDir, buffer + (1*REC_TAM), REC_TAM); //passa o pai para o currentDir
+	//memcpy(currentDir, buffer + (1*REC_TAM), REC_TAM); //passa o pai para o currentDir
 	for(i=2; i<RECS_IN_DIR; i++){  //entries 0 and 1 are . and .. and are always there
 		memcpy(entry, buffer + (i*REC_TAM), REC_TAM);
 		//printf("%s\n",record->name );
@@ -984,17 +1007,22 @@ int rmdir2 (char *pathname){ INIT;
 	mark_free(dir->firstCluster);
 
 	dir->TypeVal = 0x00;//tiporecord livre
-	strcpy(dir->name,"");
 	dir->bytesFileSize = 0;
 	dir->firstCluster = 0;
 
-	write_rec_to_disk(dir);
+	char *dir_buffer = malloc(CLUSTER_SIZE);
+	read_cluster(currentDir->firstCluster, dir_buffer);
+	int arq_ind = find_name_rec_in_dir(dir_buffer, dir->name);
+	strcpy(dir->name,"");
+	insert_rec_in_dir(dir_buffer, arq_ind, dir);
+	write_cluster(currentDir->firstCluster, dir_buffer);
+	free(dir_buffer);
+
 	free(dir);
 
 	//retorna o currDir de verdade
 	memcpy(currentDir, currentDirAntigo, REC_TAM);
 	free(currentDirAntigo);
-
 
 	return 0;
 	/*-----------------------------------------------------------------------------
@@ -1342,6 +1370,10 @@ int main(int argc, char const *argv[]) {
 	chdir2("./dir3");
 	print_dir(currentDir);*/
 
+	//mkdir2("dir3");
+	//print_dir(currentDir);
+	rmdir2("dir3");
+	print_dir(currentDir);
 
 	return 0;
 }
