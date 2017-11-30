@@ -1203,25 +1203,31 @@ DIR2 opendir2 (char *pathname){ INIT;
 }
 
 int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
-	char cluster_buffer[CLUSTER_SIZE];
-	int flag;
-	struct t2fs_record *novacoisa = malloc(sizeof(struct t2fs_record));
-	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
-		flag = read_cluster(lista_arq_abertos[handle]->fileRecord->firstCluster,cluster_buffer);
-		if ((!flag)&&(lista_arq_abertos[handle]->posFile<RECS_IN_DIR)){
-			novacoisa = malloc(REC_TAM);
-			memcpy(novacoisa,cluster_buffer+REC_TAM*lista_arq_abertos[handle]->posFile, REC_TAM);
+	char *cluster_buffer = malloc(CLUSTER_SIZE);
 
-			strcpy(dentry->name,novacoisa->name);
-			dentry->fileType = novacoisa->TypeVal;
-			dentry->fileSize = novacoisa->bytesFileSize;
+	struct t2fs_record *dir = lista_dir_abertos[handle]->fileRecord;
+	Handler *handler = lista_dir_abertos[handle];
 
-			lista_arq_abertos[handle]->posFile++;
-			return 0;
-		}
+	if(dir==NULL){
+		return -2;
 	}
 
-	return -1;
+	if(handler->posFile >= RECS_IN_DIR ){
+		return -1;
+	}
+	read_cluster(dir->firstCluster, cluster_buffer);
+	struct t2fs_record *entry = malloc(REC_TAM);
+	memcpy(entry,cluster_buffer+(REC_TAM*(handler->posFile)), REC_TAM);
+	free(cluster_buffer);
+
+	strcpy(dentry->name,entry->name);
+	dentry->fileType = entry->TypeVal;
+	dentry->fileSize = entry->bytesFileSize;
+
+	handler->posFile = handler->posFile +1;
+
+	return 0;
+
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura das entradas do diret�rio identificado por "handle".
 		A cada chamada da fun��o � lida a entrada seguinte do diret�rio representado pelo identificador "handle".
@@ -1390,6 +1396,25 @@ int main(int argc, char const *argv[]) {
 	//print_dir(currentDir);
 	//rmdir2("dir3");
 	//print_dir(currentDir);
+
+	/*DIR2 dir = opendir2("dir1");
+	DIRENT2 *entry = malloc(sizeof(DIRENT2));
+	readdir2(dir, entry);
+	printf("%s\n",entry->name);
+	printf("%u\n",entry->fileType);
+	printf("%d\n",entry->fileSize);
+	readdir2(dir, entry);
+	printf("%s\n",entry->name);
+	printf("%u\n",entry->fileType);
+	printf("%d\n",entry->fileSize);
+	readdir2(dir, entry);
+	printf("%s\n",entry->name);
+	printf("%u\n",entry->fileType);
+	printf("%d\n",entry->fileSize);
+	readdir2(dir, entry);
+	printf("%s\n",entry->name);
+	printf("%u\n",entry->fileType);
+	printf("%d\n",entry->fileSize);*/
 
 	return 0;
 }
