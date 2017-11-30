@@ -22,5 +22,5 @@ movetoLib:
 	mv libt2fs.a $(LIB_DIR)
 
 clean:
-	rm -rf  $(LIB_DIR)/libt2fs.a
+	rm -rf $(BIN_DIR)/cthread.o $(LIB_DIR)/libt2fs.a
 
