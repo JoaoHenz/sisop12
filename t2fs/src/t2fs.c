@@ -602,7 +602,6 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	while(i < FATClusterIndex){
 		next_cluster = get_next_cluster(currentCluster);
 		currentCluster = next_cluster;
-
 		i++;
 	}
 	read_cluster(currentCluster, bufferAux);
@@ -612,7 +611,7 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	currentSize += CLUSTER_SIZE - clusterPointer;
 	while(next_cluster != 0xFFFFFFFF || currentSize + CLUSTER_SIZE < size){
 		read_cluster(currentCluster, bufferAux);
-		memcpy(buffer, bufferAux, CLUSTER_SIZE);
+		strcat(buffer, bufferAux);
 		next_cluster = get_next_cluster(currentCluster);
 		currentCluster = next_cluster;
 		currentSize += CLUSTER_SIZE;
@@ -1263,8 +1262,10 @@ int closedir2 (DIR2 handle){ INIT;
 	-----------------------------------------------------------------------------*/
 }
 
+/*
 int main(int argc, char const *argv[]) {
 	/* temp main for testin */
+/*
 	INIT;
 
 	int i;
@@ -1277,9 +1278,10 @@ int main(int argc, char const *argv[]) {
 	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
 	write2(i,"nigger",6);
 	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
-	char *buffer = malloc(61);
-	read2(i,buffer,61);
+	char *buffer = malloc(lista_arq_abertos[i]->fileRecord->bytesFileSize);
+	read2(i,buffer,lista_arq_abertos[i]->fileRecord->bytesFileSize);
 	printf("SHIT I READ: %s\n", buffer);
+*/
 
 	/*
 	char *name = malloc(128);
@@ -1390,8 +1392,8 @@ int main(int argc, char const *argv[]) {
 	//print_dir(currentDir);
 	//rmdir2("dir3");
 	//print_dir(currentDir);
-
+/*
 	return 0;
 }
-
+*/
 //END OF FILE
