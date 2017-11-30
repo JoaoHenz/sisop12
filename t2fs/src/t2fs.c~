@@ -843,7 +843,7 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 			return 0;
 		}
 		else{
-			lista_arq_abertos[handle]->posFile = lista_arq_abertos[handle]->fileRecord->bytesFileSize+1;
+			lista_arq_abertos[handle]->posFile = lista_arq_abertos[handle]->fileRecord->bytesFileSize;
 			return 0;
 		}
 
@@ -1202,25 +1202,31 @@ DIR2 opendir2 (char *pathname){ INIT;
 }
 
 int readdir2 (DIR2 handle, DIRENT2 *dentry){ INIT;
-	char cluster_buffer[CLUSTER_SIZE];
-	int flag;
-	struct t2fs_record *novacoisa = malloc(sizeof(struct t2fs_record));
-	if (lista_arq_abertos[handle]->fileRecord->TypeVal == 0x02){
-		flag = read_cluster(lista_arq_abertos[handle]->fileRecord->firstCluster,cluster_buffer);
-		if ((!flag)&&(lista_arq_abertos[handle]->posFile<RECS_IN_DIR)){
-			novacoisa = malloc(REC_TAM);
-			memcpy(novacoisa,cluster_buffer+REC_TAM*lista_arq_abertos[handle]->posFile, REC_TAM);
+	char *cluster_buffer = malloc(CLUSTER_SIZE);
 
-			strcpy(dentry->name,novacoisa->name);
-			dentry->fileType = novacoisa->TypeVal;
-			dentry->fileSize = novacoisa->bytesFileSize;
+	struct t2fs_record *dir = lista_dir_abertos[handle]->fileRecord;
+	Handler *handler = lista_dir_abertos[handle];
 
-			lista_arq_abertos[handle]->posFile++;
-			return 0;
-		}
+	if(dir==NULL){
+		return -2;
 	}
 
-	return -1;
+	if(handler->posFile >= RECS_IN_DIR ){
+		return -1;
+	}
+	read_cluster(dir->firstCluster, cluster_buffer);
+	struct t2fs_record *entry = malloc(REC_TAM);
+	memcpy(entry,cluster_buffer+(REC_TAM*(handler->posFile)), REC_TAM);
+	free(cluster_buffer);
+
+	strcpy(dentry->name,entry->name);
+	dentry->fileType = entry->TypeVal;
+	dentry->fileSize = entry->bytesFileSize;
+
+	handler->posFile = handler->posFile +1;
+
+	return 0;
+
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a leitura das entradas do diret�rio identificado por "handle".
 		A cada chamada da fun��o � lida a entrada seguinte do diret�rio representado pelo identificador "handle".
@@ -1260,137 +1266,6 @@ int closedir2 (DIR2 handle){ INIT;
 	Sa�da:	Se a opera��o foi realizada com sucesso, a fun��o retorna "0" (zero).
 		Em caso de erro, ser� retornado um valor diferente de zero.
 	-----------------------------------------------------------------------------*/
-}
-
-int main(int argc, char const *argv[]) {
-	/* temp main for testin */
-	INIT;
-
-	int i;
-
-
-	i = open2("/file1.txt");
-
-	printf("File Code: %d\n",i);
-	printf("Filename of new file is: %s\n", lista_arq_abertos[i]->fileRecord->name);
-	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
-	write2(i,"nigger",6);
-	printf("File Size: %u\n\n", lista_arq_abertos[i]->fileRecord->bytesFileSize);
-	char *buffer = malloc(lista_arq_abertos[i]->fileRecord->bytesFileSize);
-	read2(i,buffer,lista_arq_abertos[i]->fileRecord->bytesFileSize);
-	printf("SHIT I READ: %s\n", buffer);
-
-	/*
-	char *name = malloc(128);
-	int i, j = 0;
-
-	printf("Id:");
-	for (i = 0; i < 4; i++){
-		printf("%c",(unsigned char) superbloco->id[i]);
-	}
-	printf("\n");
-	printf("Version: %x\n",(unsigned short int) superbloco->version);
-	printf("Size of Superblock: %x\n",(unsigned short int) superbloco->SuperBlockSize);
-	printf("Disk Size: %u\n",(unsigned short int) superbloco->DiskSize);
-	printf("Number of Sectors: %u\n",(unsigned short int) superbloco->NofSectors);
-	printf("Sectors Per Cluster: %u\n",(unsigned short int) superbloco->SectorsPerCluster);
-	printf("FAT Start Sector: %u\n",(unsigned short int) superbloco->pFATSectorStart);
-	printf("Root Directory Start Cluster: %u\n",(unsigned short int) superbloco->RootDirCluster);
-	printf("Data Start Sector: %u\n",(unsigned short int) superbloco->DataSectorStart);
-
-	printf("\nOpen2 Tests:\n");
-	i = open2("/dir1/dir2/dir3/dir4/dir5/file.txt");
-	printf("File Code: %d\n\n",i);
-
-	i = open2("/file1.txt");
-	printf("File Code: %d\n",i);
-	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
-
-
-	i = open2("/file2.txt");
-	printf("File Code: %d\n",i);
-	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
-	close2(i);
-
-	i = open2("/file2.txt");
-	printf("File Code: %d\n",i);
-	printf("Filename of new file is: %s\n\n", lista_arq_abertos[i]->fileRecord->name);
-
- 	i = open2("/file1.txt");
-	printf("File Code: %d\n\n",i);*/
-	/*
-	struct t2fs_record* testrec1 = malloc(sizeof(struct t2fs_record));
-	struct t2fs_record* testrec2 = malloc(sizeof(struct t2fs_record));
-	getFileRecord(rootDir, "file1.txt", testrec1);
-	getFileRecord(rootDir, "file2.txt", testrec2);
-	printf("Teste 1 Name: %s\n", testrec1->name);
-	printf("Teste 1 Name: %s\n", testrec2->name);
-	*/
-
-	/*char *s = malloc(256);
-
-	print_dir(currentDir);
-
-	//chdir2("./root");
-	getcwd2(s, 256);
-	printf("aaa:%s\n", s);
-	//chdir2("../dir1");
-	chdir2("./dir1");
-	print_dir(currentDir);
-<<<<<<< HEAD
-	getcwd2(s, 256);
-	printf("aaa:%s\n", s);
-	printf("\n");*/
-
-	/*
-	i = opendir2("/dir1");
-	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);
-	printf("Dir name of new Dir is: %s\n",lista_dir_abertos[i]->fileRecord->name);
-	printf("Dir size of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->bytesFileSize);
-	printf("Dir first cluster of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->firstCluster);
-	printf("Dir Code: %d\n\n",i);
-	closedir2(0);
-	printf("Dir val of new Dir is: %x\n",lista_dir_abertos[i]->fileRecord->TypeVal);
-	printf("Dir name of new Dir is: %s\n",lista_dir_abertos[i]->fileRecord->name);
-	printf("Dir size of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->bytesFileSize);
-	printf("Dir first cluster of new Dir is: %u\n",lista_dir_abertos[i]->fileRecord->firstCluster);
-	printf("Dir Code: %d\n\n",i);
-	*/
-
-	/*
-	i = opendir2("./");
-	DIRENT2 *dentry;
-	lista_dir_abertos[i]->posFile = 0;
-	readdir2(i, dentry);
-
-	printf("Name of nigga: %s\n", dentry->name);
-
-
-	DIR2 dir = opendir2("dir1");
-	Handler *handler = lista_arq_abertos[dir];
-	printf("%d\n",(handler->posFile) );
-
-
-	mark_free(0);
-	printf("%x\n", get_next_cluster(0) );
-
-	mkdir2("./dir");
-	print_dir(currentDir);
-	chdir2("./dir1");
-	print_dir(currentDir);
-	*/
-
-	/*mkdir2("dir3");
-	print_dir(currentDir);
-	chdir2("./dir3");
-	print_dir(currentDir);*/
-
-	//mkdir2("dir3");
-	//print_dir(currentDir);
-	//rmdir2("dir3");
-	//print_dir(currentDir);
-
-	return 0;
 }
 
 //END OF FILE
