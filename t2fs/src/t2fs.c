@@ -711,45 +711,61 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 }
 
 int write2 (FILE2 handle, char *buffer, int size){ INIT;
-	int i =0, j=0, l=0;
-	int size_sectors = size/SECTOR_SIZE;
-	int clusters_ajeitados =lista_arq_abertos[handle]->posFile/(SECTOR_SIZE*superbloco->SectorsPerCluster)-1;
-	DWORD firstCluster, next_cluster;
+	int i, j, bytesLeft, clusterBytesRead = 0;
+	DWORD next_cluster, currentSector, currentCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
+	BYTE *bufferAux = malloc(256);
+	bytesLeft = size;
+	int clusterOccupiedSize = lista_arq_abertos[handle]->fileRecord->bytesFileSize % (256 * superbloco->SectorsPerCluster);
 
-	firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
-	do {
-		next_cluster = get_next_cluster(firstCluster);
-		if(next_cluster != 0xFFFFFFFF){
-			break;
-		}
-		firstCluster = next_cluster;
-	} while(next_cluster != 0xFFFFFFFF);
-
-	int clusternoqualestouescrevendo = firstCluster;
-
-
-	DWORD clusterVazio;
-
-	while(i<size_sectors){ //enquanto nao terminar de gravar
-		while(lista_arq_abertos[handle]->posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
-			write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
-
-			lista_arq_abertos[handle]->posFile += SECTOR_SIZE;
-			i++; // diz o quanto falta para terminar de gravar o buffer
-			j++;//diz em qual sector deste cluster nós estamos
-		}
-		j=0;
-		clusters_ajeitados++;
-
-		clusterVazio = procuraClusterVazio();
-		if (clusterVazio == -1)
-			return -1;
-		mark_next(clusternoqualestouescrevendo,clusterVazio);
-		mark_EOF(clusterVazio);
-
-		clusternoqualestouescrevendo = clusterVazio;
-		//faz o processamento para alocar um novo cluster
+	while(get_next_cluster(currentCluster) != 0xFFFFFFFF){
+		next_cluster = get_next_cluster(currentCluster);
+		currentCluster = next_cluster;
+		i++;
 	}
+	if(clusterOccupiedSize == 0){
+		next_cluster = procuraClusterVazio();
+		mark_next(currentCluster, next_cluster);
+		currentCluster = next_cluster;
+	}
+	else{
+		currentSector = superbloco->DataSectorStart + (currentCluster * 4) + clusterOccupiedSize / 256;
+		read_sector(currentSector,bufferAux);
+		bufferAux[clusterOccupiedSize] = '\0';
+		strncat(bufferAux, buffer, (256 - clusterOccupiedSize));
+		write_sector(currentSector, bufferAux);
+		clusterBytesRead = 256 - clusterOccupiedSize;
+		bytesLeft -= clusterBytesRead;
+		//printf("buffer is: %s\n\n", bufferAux);
+	}
+	while(bytesLeft > 0){
+		next_cluster = procuraClusterVazio();
+		mark_next(currentCluster, next_cluster);
+		clusterBytesRead = 0;
+		for(i = 0; i < 4; i++){
+			if(bytesLeft >= 256){
+				currentSector = superbloco->DataSectorStart + (currentCluster * 4) + i;
+				memcpy(bufferAux, buffer + clusterBytesRead, 256);
+				//printf("buffer is: %s\n\n", bufferAux);
+				write_sector(currentSector, bufferAux);
+				bytesLeft -= 256;
+				clusterBytesRead += 256;
+			}
+			else if (bytesLeft > 0){
+				currentSector = superbloco->DataSectorStart + (currentCluster * 4) + i;
+				memcpy(bufferAux, buffer + clusterBytesRead, (unsigned int) bytesLeft);
+				for(j = 255; j > (bytesLeft - 1); j--){
+					bufferAux[j] = 0;
+				}
+				bufferAux[j] = '\0';
+				//printf("buffer is: %s\n\n", bufferAux);
+				write_sector(currentSector, bufferAux);
+				clusterBytesRead += bytesLeft;
+				bytesLeft = 0;
+			}
+		}
+		currentCluster = next_cluster;
+	}
+	mark_EOF(currentCluster);
 	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
 	char *dir_buffer = malloc(CLUSTER_SIZE);
 	read_cluster(lista_arq_abertos[handle]->dir->firstCluster, dir_buffer);
@@ -1251,7 +1267,7 @@ int main(int argc, char const *argv[]) {
 	/* temp main for testin */
 	INIT;
 
-	/*int i;
+	int i;
 
 
 	i = open2("/file1.txt");
@@ -1372,8 +1388,8 @@ int main(int argc, char const *argv[]) {
 
 	//mkdir2("dir3");
 	//print_dir(currentDir);
-	rmdir2("dir3");
-	print_dir(currentDir);
+	//rmdir2("dir3");
+	//print_dir(currentDir);
 
 	return 0;
 }

@@ -638,7 +638,7 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 	int currentPointer = lista_arq_abertos[handle]->posFile;
 	int firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
 	char *bufferAux = malloc(256);
-	char 
+	char
 
 	if (handle >= MAX_LAA || handle < 0){ // handler out of bounds error
 		return -1;
@@ -646,12 +646,12 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 
 	FATClusterIndex = firstCluster + currentPointer / (256 * superbloco->SectorsPerCluster);
 	FATSectorIndex = superbloco->pFATSectorStart + (FATClusterIndex / 64);
-	
+
 	while(!fileRead){
 		read_sector(FATSectorIndex,bufferAux);
-		
+
 	}*/
-		
+
 
 	/*
 	Handler *handler = lista_arq_abertos[handle];
@@ -711,51 +711,74 @@ int read2 (FILE2 handle, char *buffer, int size){ INIT;
 }
 
 int write2 (FILE2 handle, char *buffer, int size){ INIT;
-	int i =0, j=0, l=0;
-	int size_sectors = size/SECTOR_SIZE;
-	int clusters_ajeitados =lista_arq_abertos[handle]->posFile/(SECTOR_SIZE*superbloco->SectorsPerCluster)-1;
-	DWORD firstCluster, next_cluster;
+	int i, j, bytesLeft, clusterBytesRead = 0;
+	DWORD next_cluster, currentSector, currentCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
+	BYTE *bufferAux = malloc(256);
+	bytesLeft = size;
+	int clusterOccupiedSize = lista_arq_abertos[handle]->fileRecord->bytesFileSize % (256 * superbloco->SectorsPerCluster);
 
-	firstCluster = lista_arq_abertos[handle]->fileRecord->firstCluster;
-	do {
-		next_cluster = get_next_cluster(firstCluster);
-		if(next_cluster != 0xFFFFFFFF){
-			break;
-		}
-		firstCluster = next_cluster;
-	} while(next_cluster != 0xFFFFFFFF);
-
-	int clusternoqualestouescrevendo = firstCluster;
-
-
-	DWORD clusterVazio;
-
-	while(i<size_sectors){ //enquanto nao terminar de gravar
-		while(lista_arq_abertos[handle]->posFile%(CLUSTER_SIZE*clusters_ajeitados)<CLUSTER_SIZE){ //enquanto ele ainda nao tiver ocupado o cluster atual
-			write_sector(clusternoqualestouescrevendo*superbloco->SectorsPerCluster+j, buffer+i*SECTOR_SIZE);
-
-			lista_arq_abertos[handle]->posFile += SECTOR_SIZE;
-			i++; // diz o quanto falta para terminar de gravar o buffer
-			j++;//diz em qual sector deste cluster nós estamos
-		}
-		j=0;
-		clusters_ajeitados++;
-
-		clusterVazio = procuraClusterVazio();
-		if (clusterVazio == -1)
-			return -1;
-		mark_next(clusternoqualestouescrevendo,clusterVazio);
-		mark_EOF(clusterVazio);
-
-		clusternoqualestouescrevendo = clusterVazio;
-		//faz o processamento para alocar um novo cluster		
+	while(get_next_cluster(currentCluster) != 0xFFFFFFFF){
+		next_cluster = get_next_cluster(currentCluster);
+		currentCluster = next_cluster;
+		i++;
 	}
+	if(clusterOccupiedSize == 0){
+		next_cluster = procuraClusterVazio();
+		mark_next(currentCluster, next_cluster);
+		currentCluster = next_cluster;
+	}
+	else{
+		currentSector = superbloco->DataSectorStart + (currentCluster * 4) + clusterOccupiedSize / 256;
+		read_sector(currentSector,bufferAux);
+		bufferAux[clusterOccupiedSize] = '\0';
+		strncat(bufferAux, buffer, (256 - clusterOccupiedSize));
+		write_sector(currentSector, bufferAux);
+		clusterBytesRead = 256 - clusterOccupiedSize;
+		bytesLeft -= clusterBytesRead;
+		//printf("buffer is: %s\n\n", bufferAux);
+	}
+	while(bytesLeft > 0){
+		next_cluster = procuraClusterVazio();
+		mark_next(currentCluster, next_cluster);
+		clusterBytesRead = 0;
+		for(i = 0; i < 4; i++){
+			if(bytesLeft >= 256){
+				currentSector = superbloco->DataSectorStart + (currentCluster * 4) + i;
+				memcpy(bufferAux, buffer + clusterBytesRead, 256);
+				//printf("buffer is: %s\n\n", bufferAux);
+				write_sector(currentSector, bufferAux);
+				bytesLeft -= 256;
+				clusterBytesRead += 256;
+			}
+			else if (bytesLeft > 0){
+				currentSector = superbloco->DataSectorStart + (currentCluster * 4) + i;
+				memcpy(bufferAux, buffer + clusterBytesRead, (unsigned int) bytesLeft);
+				for(j = 255; j > (bytesLeft - 1); j--){
+					bufferAux[j] = 0;
+				}
+				bufferAux[j] = '\0';
+				//printf("buffer is: %s\n\n", bufferAux);
+				write_sector(currentSector, bufferAux);
+				clusterBytesRead += bytesLeft;
+				bytesLeft = 0;
+			}
+		}
+		currentCluster = next_cluster;
+	}
+	mark_EOF(currentCluster);
 	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
-	// WRITE UPDATED RECORD 
+	lista_arq_abertos[handle]->fileRecord->bytesFileSize += size;
+	char *dir_buffer = malloc(CLUSTER_SIZE);
+	read_cluster(lista_arq_abertos[handle]->dir->firstCluster, dir_buffer);
+	int arq_ind = find_name_rec_in_dir(dir_buffer, lista_arq_abertos[handle]->fileRecord->name);
+	insert_rec_in_dir(dir_buffer, arq_ind, lista_arq_abertos[handle]->fileRecord);
+	write_cluster(lista_arq_abertos[handle]->dir->firstCluster, dir_buffer);
+	free(dir_buffer);
+
 	return 0;
 	//atualizar negócio do arquivo no handler disco
 
-	return -1;
+
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Realiza a escrita de "size" bytes no arquivo identificado por "handle".
 		Os bytes a serem escritos est�o na �rea apontada por "buffer".
@@ -845,53 +868,82 @@ int seek2 (FILE2 handle, unsigned int offset){ INIT;
 }
 
 int mkdir2 (char *pathname){ INIT;
-	int i=0, j=0;
-	char cluster_buffer[CLUSTER_SIZE];
-	char newdirname[100], newdirpath[1000];
-	//filename = pega final do pathname se for o path for válido
+	char *aux_path = malloc(64);
+	char *subdir = malloc(64);
+	char *remainder = malloc(64);
+	char *nullstring = "\0";
+	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
 
-	strcpy(newdirpath,pathname);
-	while(newdirpath[i]!='\0') i++;
-	while(newdirpath[i]!= '/') i--;
-	newdirpath[i]= '\0';
+	//FERNANDO VÊ ISSO PRA EU
+	struct t2fs_record *this_dir;
 
-	if (chdir2(newdirpath)==0){
-		i=0;j=0;
-	 	while(pathname[i]!='\0') i++;
-		while(pathname[i]!= '/') i--;
-		while(pathname[i]!= '\0') {newdirname[j]=pathname[i];j++;i++;}
-		newdirname[j]='\0';
-
-
-		struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
-
-		novo_record->TypeVal = 0x02;//tipo arquivo simples
-		strcpy(novo_record->name,newdirname);
-		novo_record->bytesFileSize = 0;
-		novo_record->firstCluster = procuraClusterVazio() ;
-
-		if(novo_record->firstCluster == -1){
-			//TODO tratamento limpar o que foi feito antes
-			return -1;
-		}
-
-		mark_EOF(novo_record->firstCluster);
-		write_rec_to_disk(novo_record);
-
-
-		novo_record->TypeVal = 0x00;//tipo arquivo simples
-		strcpy(novo_record->name ,"");
-		novo_record->bytesFileSize = 0;
-		novo_record->firstCluster = 0 ;
-		for(i=0;i<RECS_IN_DIR;i++){
-			memcpy(cluster_buffer + (i*REC_TAM),novo_record, REC_TAM);
-		}
-
-		return 0;
+	parsePath(pathname, subdir, remainder);
+	//printf("%s\n%s\n\n", subdir,remainder);
+	if(pathname[0] == '.'){ //
+		this_dir = currentDir;
+		if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
+	}
+	else{
+		this_dir = rootDir;
+		getFileRecord(rootDir, subdir, record_aux) ;
+	}
+	while(strcmp(remainder, nullstring) != 0){
+		strcpy(subdir, nullstring);
+		strcpy(aux_path, remainder);
+		strcpy(remainder, nullstring);
+		parsePath(aux_path, subdir, remainder);
+		//printf("%s\n%s\n\n", subdir, remainder);
+		this_dir = record_aux;
+		getFileRecord(record_aux, subdir, record_aux);
 	}
 
+	struct t2fs_record *currentDirAntigo = malloc(REC_TAM);
+	memcpy(currentDirAntigo, currentDir, REC_TAM);
+	memcpy(currentDir, this_dir, REC_TAM);
 
-	return -1;
+
+	struct t2fs_record* novo_record = malloc(sizeof(struct t2fs_record));
+
+	novo_record->TypeVal = 0x02; //tipo arquivo simples
+	novo_record->bytesFileSize = CLUSTER_SIZE;
+	strcpy(novo_record->name ,subdir);
+	novo_record->firstCluster = procuraClusterVazio() ;
+
+	if(novo_record->firstCluster == -1){
+		//TODO tratamento limpar o que foi feito antes
+		return -1;
+	}
+
+	mark_EOF(novo_record->firstCluster);
+	DWORD firstCluster = novo_record->firstCluster;
+	write_rec_to_disk(novo_record);
+
+	char *cluster_buffer = malloc(CLUSTER_SIZE);
+
+
+	strcpy(novo_record->name ,".");
+
+	memcpy(cluster_buffer + (0*REC_TAM),novo_record, REC_TAM);
+	strcpy(novo_record->name ,"..");
+	novo_record->firstCluster = currentDir->firstCluster;
+	memcpy(cluster_buffer + (1*REC_TAM),novo_record, REC_TAM);
+
+	int i;
+
+	novo_record->TypeVal = 0x00;//tipo arquivo simples
+	strcpy(novo_record->name ,"");
+	novo_record->bytesFileSize = 0;
+	novo_record->firstCluster = 0 ;
+	for(i=2;i<RECS_IN_DIR;i++){
+		memcpy(cluster_buffer + (i*REC_TAM),novo_record, REC_TAM);
+	}
+
+	write_cluster(firstCluster, cluster_buffer);
+
+	memcpy(currentDir, currentDirAntigo, REC_TAM);
+
+	return 0;
 	/*-----------------------------------------------------------------------------
 	Fun��o:	Criar um novo diret�rio.
 		O caminho desse novo diret�rio � aquele informado pelo par�metro "pathname".
@@ -907,19 +959,51 @@ int mkdir2 (char *pathname){ INIT;
 }
 
 int rmdir2 (char *pathname){ INIT;
-	//TODO malandragem para ler o dir com o pathname e colocá-lo em dir
-	//setar o currDir como o pai do dir a ser removido
+	char *aux_path = malloc(64);
+	char *subdir = malloc(64);
+	char *remainder = malloc(64);
+	char *nullstring = "\0";
+	struct t2fs_record* new_record = malloc(sizeof(struct t2fs_record));
+	struct t2fs_record* record_aux = malloc(sizeof(struct t2fs_record));
+
+	//FERNANDO VÊ ISSO PRA EU
+	struct t2fs_record *this_dir;
+
+	parsePath(pathname, subdir, remainder);
+	//printf("%s\n%s\n\n", subdir,remainder);
+	if(pathname[0] == '.'){ //
+		this_dir = currentDir;
+		if (getFileRecord(currentDir, subdir, record_aux) == -1) return -1;
+	}
+	else{
+		this_dir = rootDir;
+		getFileRecord(rootDir, subdir, record_aux) ;
+	}
+	while(strcmp(remainder, nullstring) != 0){
+		strcpy(subdir, nullstring);
+		strcpy(aux_path, remainder);
+		strcpy(remainder, nullstring);
+		parsePath(aux_path, subdir, remainder);
+		//printf("%s\n%s\n\n", subdir, remainder);
+		this_dir = record_aux;
+		getFileRecord(record_aux, subdir, record_aux);
+	}
 
 	struct t2fs_record *currentDirAntigo = malloc(REC_TAM);
 	memcpy(currentDirAntigo, currentDir, REC_TAM);
+	memcpy(currentDir, this_dir, REC_TAM);
+
+
 	struct t2fs_record *dir = malloc(REC_TAM);
+	getFileRecord(currentDir, subdir, dir);
+
 	struct t2fs_record *entry = malloc(REC_TAM);
 	int i;
 	char *buffer = malloc(CLUSTER_SIZE);
 	read_cluster(dir->firstCluster, buffer);
 	//check if there are files
 
-	memcpy(currentDir, buffer + (1*REC_TAM), REC_TAM); //passa o pai para o currentDir
+	//memcpy(currentDir, buffer + (1*REC_TAM), REC_TAM); //passa o pai para o currentDir
 	for(i=2; i<RECS_IN_DIR; i++){  //entries 0 and 1 are . and .. and are always there
 		memcpy(entry, buffer + (i*REC_TAM), REC_TAM);
 		//printf("%s\n",record->name );
@@ -940,17 +1024,22 @@ int rmdir2 (char *pathname){ INIT;
 	mark_free(dir->firstCluster);
 
 	dir->TypeVal = 0x00;//tiporecord livre
-	strcpy(dir->name,"");
 	dir->bytesFileSize = 0;
 	dir->firstCluster = 0;
 
-	write_rec_to_disk(dir);
+	char *dir_buffer = malloc(CLUSTER_SIZE);
+	read_cluster(currentDir->firstCluster, dir_buffer);
+	int arq_ind = find_name_rec_in_dir(dir_buffer, dir->name);
+	strcpy(dir->name,"");
+	insert_rec_in_dir(dir_buffer, arq_ind, dir);
+	write_cluster(currentDir->firstCluster, dir_buffer);
+	free(dir_buffer);
+
 	free(dir);
 
 	//retorna o currDir de verdade
 	memcpy(currentDir, currentDirAntigo, REC_TAM);
 	free(currentDirAntigo);
-
 
 	return 0;
 	/*-----------------------------------------------------------------------------
@@ -1278,11 +1367,11 @@ int main(int argc, char const *argv[]) {
 
 	printf("Name of nigga: %s\n", dentry->name);
 
-	
+
 	DIR2 dir = opendir2("dir1");
 	Handler *handler = lista_arq_abertos[dir];
 	printf("%d\n",(handler->posFile) );
-	
+
 
 	mark_free(0);
 	printf("%x\n", get_next_cluster(0) );
@@ -1292,7 +1381,16 @@ int main(int argc, char const *argv[]) {
 	chdir2("./dir1");
 	print_dir(currentDir);
 	*/
-	
+
+	/*mkdir2("dir3");
+	print_dir(currentDir);
+	chdir2("./dir3");
+	print_dir(currentDir);*/
+
+	//mkdir2("dir3");
+	//print_dir(currentDir);
+	//rmdir2("dir3");
+	//print_dir(currentDir);
 
 	return 0;
 }
